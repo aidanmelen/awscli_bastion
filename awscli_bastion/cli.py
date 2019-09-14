@@ -81,8 +81,8 @@ def get_expiration_delta():
     if cache.is_expired():
         click.echo("The bastion-sts credentials are expired.")
     else:
-        d = cache.get_expiration(human_readable=True)
-        click.echo("The bastion-sts credentials will expire {}.".format(d))
+        delta = cache.get_expiration()
+        click.echo("The bastion-sts credentials will expire {}.".format(delta))
     return None
 
 
@@ -98,7 +98,7 @@ def set_default(profile):
     credentials.set_default(profile)
     credentials.write()
 
-    click.echo("Setting the default profile with attributes from the {} profile.".format(profile))
+    click.echo("Setting the 'default' profile with attributes from the '{}' profile.".format(profile))
     return None
 
 
@@ -135,6 +135,8 @@ def set_mfa_serial(bastion_sts):
     credentials = Credentials()
     credentials.set_mfa_serial(bastion_sts, mfa_serial)
     credentials.write()
+
+    click.echo("Setting the 'mfa_set' attribute for the '{}' profile.".format(bastion_sts))
     return None
 
 
@@ -142,7 +144,10 @@ def set_mfa_serial(bastion_sts):
 def clear_cache():
     """ Clear the bastion-sts credential cache. """
     cache = Cache()
+    cache_path = cache.bastion_sts_cache_path
     cache.delete()
+
+    click.echo("{} has been removed.".format(cache_path))
     return None
 
 
