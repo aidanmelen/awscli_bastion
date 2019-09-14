@@ -141,7 +141,7 @@ Output how much time until the bastion-sts credentials expire::
 Set the mfa serial number::
 
     $ bastion set-mfa-serial
-    Setting the 'mfa_set' attribute for the 'bastion-sts' profile.
+    Setting the 'mfa_serial' attribute for the 'bastion-sts' profile.
 
 Reset the bastion credentials cache::
 
