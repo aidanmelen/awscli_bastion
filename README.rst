@@ -19,8 +19,12 @@ awscli_bastion
         :alt: Updates
 
 
-
 awscli_bastion extends the awscli by managing mfa protected short-lived credentials.
+
+.. image:: docs/awscli-bastion.png
+    :width: 200px
+    :align: center
+    :height: 100px
 
 
 * Free software: Apache Software License 2.0
@@ -79,6 +83,7 @@ Usage
 Run awscli commands normally and the bastion credential_process will handle the rest::
 
     $ aws sts get-caller-identity --profile dev
+    Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
     {
         "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
         "Account": "123456789012",
@@ -99,18 +104,58 @@ Run awscli commands normally and the bastion credential_process will handle the 
         "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
     }
 
-Renew the bastion credentials cache::
+Renew the bastion-sts credentials cache::
 
+    # these are fake credentials
     $ bastion get-session-token --mfa-code 123456
+    {
+        "AccessKeyId": "ASIA554SXXVIYYQRGGER",
+        "SecretAccessKey": "aw5/hbwzGP31s2lfC3ZQshKE+AZdlOYkqBUI4otp",
+        "SessionToken": "FQoGZXIvYXdHEY4aDDDbLp6g5sfNojzC6CKwAV+yefPfFg7y0xADMDECoddpj9WecBEReMtXkRjCVZfbSa1604EIK2q0zshlsP0PtF0e5wBZFDuZHTI464EpSQEXkJajksWeMMOe7PSzyJOX5Zqp8ve4ItHoE70tGxIVQjA06NbvodNjjOO/gsbDAcKHW1rx9wnq3RJ+dQbqqNq01R1vrDvTjxDNTrZr2wYI2qYrd9REP+mc44EeIO+3r0iuiwxRCL1UzS/4nG4IRYG2KMeo9esF",
+        "Expiration": "2019-09-15T08:57:43+00:00",
+        "Version": 1
+    }
 
 Replace default profile with assume_role profile::
 
     $ bastion set-default dev
-    updating the default profile with the dev profile
+    Setting the 'default' profile with attributes from the 'dev' profile.
+
+    $ aws sts get-caller-identity
+    {
+        "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
+        "Account": "123456789012",
+        "Arn": "arn:aws:sts::234567890123:assumed-role/admin/botocore-session-1234567890"
+    }
+
+
+Special Usage
+-------------
+
+Output how much time until the bastion-sts credentials expire::
+
+    $ bastion get-expiration-delta                                                                                                       0.3.0
+    The bastion-sts credentials will expire 11 hours from now.
+
+Set the mfa serial number::
+
+    $ bastion set-mfa-serial
+    Setting the 'mfa_serial' attribute for the 'bastion-sts' profile.
 
 Reset the bastion credentials cache::
 
-    $ bastion reset-cache
+    $ bastion clear-cache
+    ~/.aws/cli/cache/bastion-sts.json has been removed.
+
+Write bastion-sts credentials to the aws shared credential file::
+
+    $ bastion get-session-token --write-to-shared-credentials-file --mfa-code 123456
+    Setting the 'bastion-sts' profile with sts credential attributes.
+
+Write assume role sts credentials to the aws shared credential file::
+
+    $ bastion assume-role dev
+    Setting the 'dev' profile with assume role sts credential attributes.
 
 Credits
 -------
