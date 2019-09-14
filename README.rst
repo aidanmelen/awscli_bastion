@@ -25,7 +25,6 @@ awscli_bastion extends the awscli by managing mfa protected short-lived credenti
     :width: 200px
     :align: center
     :height: 100px
-    :alt: alternate text
 
 
 * Free software: Apache Software License 2.0
@@ -147,6 +146,16 @@ Reset the bastion credentials cache::
 
     $ bastion clear-cache
     ~/.aws/cli/cache/bastion-sts.json has been removed.
+
+Write bastion-sts credentials to the aws shared credential file::
+
+    $ bastion get-session-token --write-to-shared-credentials-file --mfa-code 123456
+    Setting the 'bastion-sts' profile with sts credential attributes.
+
+Write assume role sts credentials to the aws shared credential file::
+
+    $ bastion assume-role dev
+    Setting the 'dev' profile with assume role sts credential attributes.
 
 Credits
 -------
