@@ -24,7 +24,7 @@ class Credentials:
         try:
             return self.config[bastion_sts]["mfa_serial"]
         except Exception:
-            click.echo("Error: Failed to get mfa_serial from {} profile.".format(bastion_sts))
+            click.echo("An error occured when getting the mfa_serial from {} profile.".format(bastion_sts))
             sys.exit(1)
     
     def set_mfa_serial(self, bastion_sts, mfa_serial):
@@ -39,7 +39,7 @@ class Credentials:
         try:
             self.config[bastion_sts]["mfa_serial"] = mfa_serial
         except Exception:
-            click.echo("Error: Failed to set mfa_serial for {} profile.".format(bastion_sts))
+            click.echo("An error occured when setting the mfa_serial for {} profile.".format(bastion_sts))
             sys.exit(1)
 
     def set_default(self, profile):

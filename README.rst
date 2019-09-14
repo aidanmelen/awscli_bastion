@@ -85,6 +85,7 @@ Usage
 Run awscli commands normally and the bastion credential_process will handle the rest::
 
     $ aws sts get-caller-identity --profile dev
+    Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
     {
         "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
         "Account": "123456789012",
@@ -105,7 +106,7 @@ Run awscli commands normally and the bastion credential_process will handle the 
         "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
     }
 
-Renew the bastion credentials cache::
+Renew the bastion-sts credentials cache::
 
     $ bastion get-session-token --mfa-code 123456
 

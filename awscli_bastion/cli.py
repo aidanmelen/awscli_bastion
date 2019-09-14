@@ -57,12 +57,17 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
     if not creds:
         session = boto3.Session(profile_name=bastion, region_name=region)
         sts = session.client("sts")
-        creds = sts.get_session_token(
-            DurationSeconds=duration_seconds,
-            SerialNumber=mfa_serial,
-            TokenCode=mfa_code
-        )["Credentials"]
-        cache.write(creds)
+        try:
+            creds = sts.get_session_token(
+                DurationSeconds=duration_seconds,
+                SerialNumber=mfa_serial,
+                TokenCode=mfa_code
+            )["Credentials"]
+            cache.write(creds)
+
+        except ClientError as e:
+            click.echo(e)
+            sys.exit(1)
 
     # stdout for awscli credential_process
     click.echo(json.dumps(creds, indent=4))
@@ -115,13 +120,14 @@ def set_mfa_serial(bastion_sts):
             mfa_serial = iam_mfa_device["SerialNumber"]
             break   # no need to check another MFA device.
         else:
-            click.echo("Error: Failed to get mfa device from current iam user.")
+            click.echo("An error occured when getting the mfa device from current iam user.")
             sys.exit(1)
 
     except ClientError as e:
         if e.response['Error']['Code'] == 'ValidationError':
-            click.echo("Error: set-mfa-serial requires your iam user to have " \
-                "'iam:get_user' and 'iam:list_mfa_devices' permissions.")
+            click.echo("An error occured when getting the mfa serial number. " \
+                "Your iam user to have 'iam:get_user' and 'iam:list_mfa_devices' " \
+                "permissions. \n{}".format(e))
         else:
             click.echo("Unexpected error: {}".format(e))
         sys.exit(1)
