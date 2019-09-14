@@ -76,7 +76,7 @@ Configure
 Usage
 -----
 
-Run awscli commands normally and the bastion credential_process will handle the rest.::
+Run awscli commands normally and the bastion credential_process will handle the rest::
 
     $ aws sts get-caller-identity --profile dev
     {
@@ -99,16 +99,16 @@ Run awscli commands normally and the bastion credential_process will handle the 
         "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
     }
 
-Renew the bastion credentials cache.::
+Renew the bastion credentials cache::
 
     $ bastion get-session-token --mfa-code 123456
 
-Replace default profile with assume_role profile.::
+Replace default profile with assume_role profile::
 
     $ bastion set-default dev
     updating the default profile with the dev profile
 
-Reset the bastion credentials cache.::
+Reset the bastion credentials cache::
 
     $ bastion reset-cache
 
