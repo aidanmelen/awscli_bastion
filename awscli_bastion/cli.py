@@ -1,17 +1,18 @@
 from datetime import timedelta
 from .credentials import Credentials
 from .cache import Cache
-
 import boto3
 import sys
 import click
 import getpass
 import json
 
+
 @click.group()
 @click.version_option()
 def main():
     return 0
+
 
 @click.command()
 @click.option("--duration-seconds", help="The  duration, in seconds, that the credentials should remain valid.", default=timedelta(hours=12).seconds)
@@ -20,7 +21,7 @@ def main():
 @click.option("--profile", help="the profile containing the long-lived IAM credentials", default="bastion")
 @click.option("--profile-sts", help="the profile that assume role profiles will depend on", default="bastion-sts")
 @click.option("--region", help="the region used when creating new AWS connections", default="us-west-2")
-def get_session_token(duration_seconds, mfa_serial, mfa_code, 
+def get_session_token(duration_seconds, mfa_serial, mfa_code,
     profile, profile_sts, region):
 
     credentials = Credentials()
@@ -29,10 +30,10 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
 
     if not mfa_serial:
         mfa_serial = credentials.get_mfa_serial(profile_sts)
-    
+
     if not mfa_code and cache.does_exist():
         creds = cache.read()
-    
+
     if not mfa_code and not creds:
         mfa_code = getpass.getpass("Enter MFA code for {}: ".format(mfa_serial))
 
@@ -48,7 +49,8 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
 
     click.echo(json.dumps(creds))
     return None
-    
+
+
 @click.command()
 @click.argument("profile")
 def set_default(profile):
@@ -59,12 +61,13 @@ def set_default(profile):
     click.echo("updating the default profile with the {} profile".format(profile))
     return None
 
+
 @click.command()
 def reset_cache():
     cache = Cache()
     cache.delete()
 
-    
+
 main.add_command(get_session_token)
 main.add_command(set_default)
 main.add_command(reset_cache)

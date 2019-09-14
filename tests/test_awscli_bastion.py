@@ -7,8 +7,9 @@
 import unittest
 from click.testing import CliRunner
 
-from awscli_bastion import awscli_bastion
 from awscli_bastion import cli
+# from awscli_bastion import credentials
+# from awscli_bastion import cache
 
 
 class TestAwscli_bastion(unittest.TestCase):
@@ -28,7 +29,7 @@ class TestAwscli_bastion(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli.main)
         assert result.exit_code == 0
-        # assert 'awscli_bastion.cli.main' in result.output
+        assert 'main' in result.output
         help_result = runner.invoke(cli.main, ['--help'])
         assert help_result.exit_code == 0
-        assert '--help  Show this message and exit.' in help_result.output
+        assert '--help     Show this message and exit.' in help_result.output

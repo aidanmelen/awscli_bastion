@@ -1,0 +1,38 @@
+awscli\_bastion package
+=======================
+
+Submodules
+----------
+
+awscli\_bastion.cache module
+----------------------------
+
+.. automodule:: awscli_bastion.cache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+awscli\_bastion.cli module
+--------------------------
+
+.. automodule:: awscli_bastion.cli
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+awscli\_bastion.credentials module
+----------------------------------
+
+.. automodule:: awscli_bastion.credentials
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: awscli_bastion
+   :members:
+   :undoc-members:
+   :show-inheritance:

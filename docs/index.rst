@@ -1,5 +1,5 @@
 Welcome to awscli_bastion's documentation!
-======================================
+==========================================
 
 .. toctree::
    :maxdepth: 2
