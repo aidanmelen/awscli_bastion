@@ -10,14 +10,26 @@ import pathlib
 
 
 class Cache:
+    """ Manage the bastion-sts credential cache (~/.aws/cli/cache/bastion-sts.json). """
+
     def __init__(self):
         self.home = str(pathlib.Path.home())
-        self.bastion_cache_path = "{}/.aws/cli/cache/bastion.json".format(self.home)
+        self.bastion_sts_cache_path = "{}/.aws/cli/cache/bastion-sts.json".format(self.home)
 
     def does_exist(self):
-        return isfile(self.bastion_cache_path)
+        """ Return whether or not the bastion-sts credential cache exists.
+
+        :rtype: bool
+        :return: Whether or not the bastion-sts credential cache exists.
+        """
+        return isfile(self.bastion_sts_cache_path)
 
     def is_expired(self):
+        """ Return whether or not the bastion-sts credentials are expired.
+
+        :return: Whether or not the bastion-sts credentials are expired.
+        :rtype: bool
+        """
         expired = False
         if self.does_exist():
             now_dt = datetime.datetime.now(tzutc())
@@ -30,6 +42,13 @@ class Cache:
         return expired
 
     def get_expiration(self, human_readable=True):
+        """ Return how much time until the bastion-sts credentials expire.
+
+        :param human_readable: Whether or not to output as human readable.
+        :type human_readable: bool
+        :return: How much time until the bastion-sts credentials expire.
+        :rtype: str
+        """
         now_dt = datetime.datetime.now(tzutc())
         expiration_iso = self.read()["Expiration"]
         expiration_dt = parse(expiration_iso)
@@ -37,14 +56,22 @@ class Cache:
         return humanize.naturaltime(delta) if human_readable else delta
 
     def write(self, creds):
+        """ Writes json formatted credentials to the bastion-sts cache file.
+
+        :param creds: bastion-sts short-lived credentials.
+        :type creds: bool
+        :type creds: dict
+        """
         creds["Version"] = 1
         creds["Expiration"] = creds["Expiration"].isoformat()
-        with open(self.bastion_cache_path, 'w+') as f:
+        with open(self.bastion_sts_cache_path, 'w+') as f:
             json.dump(creds, f, indent=4)
 
     def read(self):
-        with open(self.bastion_cache_path, 'r') as f:
+        """ Reads json formatted credentials to the bastion-sts cache file. """
+        with open(self.bastion_sts_cache_path, 'r') as f:
             return json.load(f)
 
     def delete(self):
-        os.remove(self.bastion_cache_path)
+        """ Deletes the bastion-sts cache file. """
+        os.remove(self.bastion_sts_cache_path)
