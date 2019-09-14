@@ -110,7 +110,7 @@ Replace default profile with assume_role profile.::
 
 Reset the bastion credentials cache.::
 
-    $ bastion resert-cache
+    $ bastion reset-cache
 
 Credits
 -------
