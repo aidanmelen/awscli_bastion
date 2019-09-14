@@ -14,46 +14,6 @@ awscli_bastion
         :alt: Documentation Status
 
 
-
-
-awscli_bastion extends the awscli by managing mfa protected short-lived credentials.
-
-
-* Free software: MIT license
-* Documentation: https://awscli-bastion.readthedocs.io.
-
-
-Features
---------
-
-* TODO
-
-Credits
--------
-
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
-
-
-==============
-awscli_bastion
-==============
-
-
-.. image:: https://img.shields.io/pypi/v/awscli_bastion.svg
-        :target: https://pypi.python.org/pypi/awscli_bastion
-
-.. image:: https://img.shields.io/travis/aidanmelen/awscli_bastion.svg
-        :target: https://travis-ci.org/aidanmelen/awscli_bastion
-
-.. image:: https://readthedocs.org/projects/awscli-bastion/badge/?version=latest
-        :target: https://awscli-bastion.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
-
 .. image:: https://pyup.io/repos/github/aidanmelen/awscli_bastion/shield.svg
         :target: https://pyup.io/repos/github/aidanmelen/awscli_bastion/
         :alt: Updates
@@ -139,6 +99,18 @@ Run awscli commands normally and the bastion credential_process will handle the 
         "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
     }
 
+Renew the bastion credentials cache.::
+
+    $ bastion get-session-token --mfa-code 123456
+
+Replace default profile with assume_role profile.::
+
+    $ bastion set-default dev
+    updating the default profile with the dev profile
+
+Reset the bastion credentials cache.::
+
+    $ bastion resert-cache
 
 Credits
 -------
