@@ -15,12 +15,12 @@ def main():
 
 
 @click.command()
-@click.option("--duration-seconds", help="The  duration, in seconds, that the credentials should remain valid.", default=timedelta(hours=12).seconds)
-@click.option("--mfa-serial", help="the identification number of the MFA device that is associated with the IAM user", default=None)
-@click.option("--mfa-code", help="the value  provided by the MFA device", default=None)
-@click.option("--profile", help="the profile containing the long-lived IAM credentials", default="bastion")
-@click.option("--profile-sts", help="the profile that assume role profiles will depend on", default="bastion-sts")
-@click.option("--region", help="the region used when creating new AWS connections", default="us-west-2")
+@click.option("--duration-seconds", help="The duration, in seconds, that the credentials should remain valid.", default=timedelta(hours=12).seconds)
+@click.option("--mfa-serial", help="the identification number of the MFA device that is associated with the IAM user.", default=None)
+@click.option("--mfa-code", help="the value provided by the MFA device.", default=None)
+@click.option("--profile", help="the profile containing the long-lived IAM credentials.", default="bastion")
+@click.option("--profile-sts", help="the profile that assume role profiles will depend on.", default="bastion-sts")
+@click.option("--region", help="the region used when creating new AWS connections.", default="us-west-2")
 def get_session_token(duration_seconds, mfa_serial, mfa_code,
     profile, profile_sts, region):
 
@@ -31,7 +31,7 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
     if not mfa_serial:
         mfa_serial = credentials.get_mfa_serial(profile_sts)
 
-    if not mfa_code and cache.does_exist():
+    if not mfa_code and not cache.is_expired():
         creds = cache.read()
 
     if not mfa_code and not creds:
@@ -47,7 +47,7 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
         )["Credentials"]
         cache.write(creds)
 
-    click.echo(json.dumps(creds))
+    click.echo(json.dumps(creds, indent=4))
     return None
 
 
@@ -68,9 +68,20 @@ def reset_cache():
     cache.delete()
 
 
+@click.command()
+def get_expiration_delta():
+    cache = Cache()
+    if cache.is_expired():
+        click.echo("the bastion credentials are expired.")
+    else:
+        d = cache.get_expiration(human_readable=True)
+        click.echo("The bastion credentials will expire {}.".format(d))
+
+
 main.add_command(get_session_token)
 main.add_command(set_default)
 main.add_command(reset_cache)
+main.add_command(get_expiration_delta)
 
 if __name__ == "__main__":
     sys.exit(main())

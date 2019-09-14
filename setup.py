@@ -11,7 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=6.0', 'boto3>=1.5.0', 'awscli>=1.13.0']
+requirements = [ 'Click>=6.0', 'boto3>=1.5.0', 'awscli>=1.13.0', 'humanize>=0.5.1' ]
 
 setup_requirements = [ 'sphinx', 'twine', 'bumpversion' ]
 
@@ -20,14 +20,12 @@ test_requirements = [ 'flake8', 'tests', 'tox' ]
 setup(
     author="Aidan Melen",
     author_email='aidan.l.melen@gmail.com',
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+    python_requires='>=3.5',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

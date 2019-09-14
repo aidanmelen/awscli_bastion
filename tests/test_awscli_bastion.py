@@ -21,9 +21,6 @@ class TestAwscli_bastion(unittest.TestCase):
     def tearDown(self):
         """Tear down test fixtures, if any."""
 
-    def test_000_something(self):
-        """Test something."""
-
     def test_command_line_interface(self):
         """Test the CLI."""
         runner = CliRunner()
@@ -33,3 +30,15 @@ class TestAwscli_bastion(unittest.TestCase):
         help_result = runner.invoke(cli.main, ['--help'])
         assert help_result.exit_code == 0
         assert '--help     Show this message and exit.' in help_result.output
+
+    def test_cli_get_session_token(self):
+        """Test get_session_token."""
+
+    def test_cli_set_default(self):
+        """Test set_default."""
+
+    def test_cli_reset_cache(self):
+        """Test reset_cache."""
+
+    def test_cli_get_expiration_delta(self):
+        """Test get_expiration_delta."""

@@ -1,4 +1,9 @@
+from datetime import timedelta
+from dateutil.tz import tzutc
+from dateutil.parser import parse
 from os.path import isfile
+import datetime
+import humanize
 import json
 import os
 import pathlib
@@ -13,7 +18,23 @@ class Cache:
         return isfile(self.bastion_cache_path)
 
     def is_expired(self):
-        return True
+        expired = False
+        if self.does_exist():
+            now_dt = datetime.datetime.now(tzutc())
+            expiration_iso = self.read()["Expiration"]
+            expiration_dt = parse(expiration_iso)
+            if now_dt > expiration_dt:
+                expired = True
+        else:
+            expired = True
+        return expired
+
+    def get_expiration(self, human_readable=True):
+        now_dt = datetime.datetime.now(tzutc())
+        expiration_iso = self.read()["Expiration"]
+        expiration_dt = parse(expiration_iso)
+        delta = now_dt - expiration_dt
+        return humanize.naturaltime(delta) if human_readable else delta
 
     def write(self, creds):
         creds["Version"] = 1
