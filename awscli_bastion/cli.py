@@ -82,23 +82,12 @@ def assume_role(profile, duration_seconds, bastion_sts, region):
 @click.option("--bastion-sts", help="the profile that assume role profiles will depend on.", default="bastion-sts")
 def get_expiration(bastion_sts):
     """ Output how much time until the bastion-sts credentials expire. """
-    credentials = Credentials()
     cache = Cache()
-
-    if "aws_session_token" in credentials.config[bastion_sts]:
-        click.echo("Checking '{}' for expiration timestamp.".format(credentials.aws_shared_credentials_path))
-        if credentials.is_expired():
-            click.echo("The bastion-sts credentials are expired.")
-        else:
-            delta = credentials.get_expiration()
-            click.echo("The bastion-sts credentials will expire {}.".format(delta))
+    if cache.is_expired():
+        click.echo("The bastion-sts cached credentials are expired.")
     else:
-        click.echo("Checking '{}' for expiration timestamp.".format(cache.bastion_sts_cache_path))
-        if cache.is_expired():
-            click.echo("The bastion-sts cached credentials are expired.")
-        else:
-            delta = cache.get_expiration()
-            click.echo("The bastion-sts cached credentials will expire {}.".format(delta))
+        delta = cache.get_expiration()
+        click.echo("The bastion-sts cached credentials will expire {}.".format(delta))
     return None
 
 
