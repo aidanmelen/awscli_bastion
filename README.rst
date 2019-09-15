@@ -42,7 +42,7 @@ Install
 Configure
 ---------
 
-*~/.aws/credentials*::
+(required) *~/.aws/credentials*::
 
     # (required) aws bastion profiles
 
@@ -70,19 +70,44 @@ Configure
     role_arn = arn:aws:iam::456789012345:role/spectator
     source_profile = bastion-sts
 
-*~/.aws/config*::
+(required) *~/.aws/config*::
 
     [default]
     region = us-west-2
     output = json
 
+(opitonal) *~/.aws/cli/alias*::
+
+    [toplevel]
+
+    whoami = sts get-caller-identity
+
+    bastion =
+        !f() {
+            bastion
+        }; f
+
+    auth =
+        !f() {
+            if [ $# -eq 0 ]
+            then
+                bastion get-session-token --write-to-shared-credentials-file
+            else
+                bastion get-session-token --write-to-shared-credentials-file --mfa-code $1
+            fi
+            bastion assume-role dev
+            bastion assume-role stage
+            bastion assume-role prod
+            echo "Successfully assumed roles in all AWS accounts!"
+        }; f
+
 
 Usage
 -----
 
-Run awscli commands normally and the bastion credential_process will handle the rest::
+Run awscli commands normally and the bastion `credential_process`_ will handle the rest::
 
-    $ aws sts get-caller-identity --profile dev
+    $ aws whoami --profile dev
     Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
     {
         "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
@@ -90,14 +115,14 @@ Run awscli commands normally and the bastion credential_process will handle the 
         "Arn": "arn:aws:sts::234567890123:assumed-role/admin/botocore-session-1234567890"
     }
 
-    $ aws sts get-caller-identity --profile stage
+    $ aws whoami --profile stage
     {
         "UserId": "BBBBBBBBBBBBBBBBBBBBB:botocore-session-2345678901",
         "Account": "345678901234",
         "Arn": "arn:aws:sts::345678901234:assumed-role/poweruser/botocore-session-2345678901"
     }
 
-    $ aws sts get-caller-identity --profile prod
+    $ aws whoami --profile prod
     {
         "UserId": "CCCCCCCCCCCCCCCCCCCCC:botocore-session-3456789012",
         "Account": "456789012345",
@@ -121,7 +146,7 @@ Replace default profile with assume_role profile::
     $ bastion set-default dev
     Setting the 'default' profile with attributes from the 'dev' profile.
 
-    $ aws sts get-caller-identity
+    $ aws whoami
     {
         "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
         "Account": "123456789012",
@@ -132,10 +157,44 @@ Replace default profile with assume_role profile::
 Special Usage
 -------------
 
-Output how much time until the bastion-sts credentials expire::
+Write bastion-sts credentials to the aws shared credential file::
 
-    $ bastion get-expiration-delta                                                                                                       0.3.0
-    The bastion-sts credentials will expire 11 hours from now.
+    $ bastion get-session-token --write-to-shared-credentials-file --mfa-code 123456
+    Setting the 'bastion-sts' profile with sts credential attributes.
+    
+    # this will set the following in the ~/.aws/credentials file
+    # [bastion-sts]
+    # source_profile = bastion-sts
+    # aws_session_expiration = 2019-09-15T02:22:29+00:00
+    # aws_access_key_id = ASIA554SXXVIYYQRGGER
+    # aws_secret_access_key = aw5/hbwzGP31s2lfC3ZQshKE+AZdlOYkqBUI4otp
+    # aws_session_token = FQoGZXIvYXdHEY4aDDDbLp6g5sfNojzC6CKwAV+yefPfFg7y0xADMDECoddpj9WecBEReMtXkRjCVZfbSa1604EIK2q0zshlsP0PtF0e5wBZFDuZHTI464EpSQEXkJajksWeMMOe7PSzyJOX5Zqp8ve4ItHoE70tGxIVQjA06NbvodNjjOO/gsbDAcKHW1rx9wnq3RJ+dQbqqNq01R1vrDvTjxDNTrZr2wYI2qYrd9REP+mc44EeIO+3r0iuiwxRCL1UzS/4nG4IRYG2KMeo9esF
+
+Write assume role sts credentials to the aws shared credential file::
+
+    $ bastion assume-role dev
+    Setting the 'dev' profile with assume role sts credential attributes.
+
+    # this will set the following in the ~/.aws/credentials file
+    # [dev]
+    # role_arn = arn:aws:iam::234567890123:role/admin
+    # source_profile = bastion-sts
+    # aws_session_expiration = 2019-09-15T02:22:29+00:00
+    # aws_access_key_id = ASIA554SXXVIYYQRGGER
+    # aws_secret_access_key = aw5/hbwzGP31s2lfC3ZQshKE+AZdlOYkqBUI4otp
+    # aws_session_token = FQoGZXIvYXdHEY4aDDDbLp6g5sfNojzC6CKwAV+yefPfFg7y0xADMDECoddpj9WecBEReMtXkRjCVZfbSa1604EIK2q0zshlsP0PtF0e5wBZFDuZHTI464EpSQEXkJajksWeMMOe7PSzyJOX5Zqp8ve4ItHoE70tGxIVQjA06NbvodNjjOO/gsbDAcKHW1rx9wnq3RJ+dQbqqNq01R1vrDvTjxDNTrZr2wYI2qYrd9REP+mc44EeIO+3r0iuiwxRCL1UzS/4nG4IRYG2KMeo9esF
+
+Output how much time until the bastion-sts cache credentials expire::
+
+    $ bastion get-expiration-delta
+    Checking '/Users/aidan-melen/.aws/cli/cache/bastion-sts.json' for expiration timestamp.
+    The bastion-sts cached credentials will expire 11 hours from now.
+
+If the get-session-token --write-to-shared-credentials-file is used then it will check for expiration from the aws shared credentials file::
+
+    $ bastion get-expiration-delta
+    Checking '/Users/aidan-melen/.aws/credentials' for expiration timestamp.
+    The bastion-sts cached credentials will expire 11 hours from now.
 
 Set the mfa serial number::
 
@@ -146,16 +205,11 @@ Reset the bastion credentials cache::
 
     $ bastion clear-cache
     ~/.aws/cli/cache/bastion-sts.json has been removed.
+    sts credentials were removed from the bastion-sts profile.
+    sts credentials were removed from the dev profile.
+    sts credentials were removed from the stage profile.
+    sts credentials were removed from the prod profile.
 
-Write bastion-sts credentials to the aws shared credential file::
-
-    $ bastion get-session-token --write-to-shared-credentials-file --mfa-code 123456
-    Setting the 'bastion-sts' profile with sts credential attributes.
-
-Write assume role sts credentials to the aws shared credential file::
-
-    $ bastion assume-role dev
-    Setting the 'dev' profile with assume role sts credential attributes.
 
 Credits
 -------
@@ -165,3 +219,4 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 .. _Making a python package for pypi: http://otuk.kodeten.com/making-a-python-package-for-pypi---easy-steps
+.. credential_process: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html

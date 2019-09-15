@@ -28,23 +28,7 @@ def main():
 @click.option('--write-to-shared-credentials-file', is_flag=True)
 def get_session_token(duration_seconds, mfa_serial, mfa_code,
     bastion, bastion_sts, region, write_to_shared_credentials_file):
-    """Output the bastion-sts short-lived credentials and output for the awscli credential_process.
-
-    :param duration_seconds: The duration, in seconds, that the credentials should remain valid.
-    :param mfa_serial: The identification number of the MFA device that is associated with the IAM user.
-    :param mfa_code: The value provided by the MFA device.
-    :param bastion: The profile containing the long-lived IAM credentials.
-    :param bastion_sts: The profile that assume role profiles source.
-    :param region: The region used when creating new AWS connections.
-    :param write_to_shared_credentials_file: Whether or not to store in aws shared credentials file.
-    :type duration_seconds: str
-    :type mfa_serial: str
-    :type mfa_code: str
-    :type bastion: str
-    :type bastion_sts: str
-    :type region: str
-    :type write_to_shared_credentials_file: str
-    """
+    """Output the bastion-sts short-lived credentials and output for the awscli credential_process. """
     credentials = Credentials()
     cache = Cache()
     sts_creds = None
@@ -67,7 +51,7 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
                 SerialNumber=mfa_serial,
                 TokenCode=mfa_code
             )["Credentials"]
-
+            sts_creds["Expiration"] = sts_creds["Expiration"].isoformat()
             cache.write(sts_creds)
 
         except ClientError as e:
@@ -78,6 +62,7 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
         credentials.config[bastion_sts]["aws_access_key_id"] = sts_creds["AccessKeyId"]
         credentials.config[bastion_sts]["aws_secret_access_key"] = sts_creds["SecretAccessKey"]
         credentials.config[bastion_sts]["aws_session_token"] = sts_creds["SessionToken"]
+        credentials.config[bastion_sts]["aws_session_expiration"] = sts_creds["Expiration"]
         credentials.write()
         click.echo("Setting the '{}' profile with sts credential attributes.".format(bastion_sts))
     else:
@@ -92,17 +77,7 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
 @click.option("--bastion-sts", help="The profile that assume role profiles source.", default="bastion-sts")
 @click.option("--region", help="The region used when creating new AWS connections.", default="us-west-2")
 def assume_role(profile, duration_seconds, bastion_sts, region):
-    """Set the profile with short-lived credentials from assume_role.
-
-    :param profile: The profile containing role_arn.
-    :param duration_seconds: The duration, in seconds, that the credentials should remain valid.
-    :param bastion_sts: The profile that assume role profiles source.
-    :param region: The region used when creating new AWS connections.
-    :type profile: str
-    :type duration_seconds: str
-    :type bastion_sts: str
-    :type region: str
-    """
+    """Set the profile with short-lived credentials from assume_role. """
     credentials = Credentials()
     session = boto3.Session(profile_name=bastion_sts, region_name=region)
     sts = session.client("sts")
@@ -116,6 +91,7 @@ def assume_role(profile, duration_seconds, bastion_sts, region):
     credentials.config[profile]["aws_access_key_id"] = sts_creds["AccessKeyId"]
     credentials.config[profile]["aws_secret_access_key"] = sts_creds["SecretAccessKey"]
     credentials.config[profile]["aws_session_token"] = sts_creds["SessionToken"]
+    credentials.config[profile]["aws_session_expiration"] = sts_creds["Expiration"].isoformat()
     credentials.write()
 
     click.echo("Setting the '{}' profile with assume role sts credential attributes.".format(profile))
@@ -123,25 +99,33 @@ def assume_role(profile, duration_seconds, bastion_sts, region):
 
 
 @click.command()
-def get_expiration_delta():
+@click.option("--bastion-sts", help="the profile that assume role profiles will depend on.", default="bastion-sts")
+def get_expiration(bastion_sts):
     """ Output how much time until the bastion-sts credentials expire. """
+    credentials = Credentials()
     cache = Cache()
-    if cache.is_expired():
-        click.echo("The bastion-sts credentials are expired.")
+
+    if "aws_session_token" in credentials.config[bastion_sts]:
+        click.echo("Checking '{}' for expiration timestamp.".format(credentials.aws_shared_credentials_path))
+        if credentials.is_expired():
+            click.echo("The bastion-sts credentials are expired.")
+        else:
+            delta = credentials.get_expiration()
+            click.echo("The bastion-sts credentials will expire {}.".format(delta))
     else:
-        delta = cache.get_expiration()
-        click.echo("The bastion-sts credentials will expire {}.".format(delta))
+        click.echo("Checking '{}' for expiration timestamp.".format(cache.bastion_sts_cache_path))
+        if cache.is_expired():
+            click.echo("The bastion-sts cached credentials are expired.")
+        else:
+            delta = cache.get_expiration()
+            click.echo("The bastion-sts cached credentials will expire {}.".format(delta))
     return None
 
 
 @click.command()
 @click.argument("profile")
 def set_default(profile):
-    """ Set the default profile with attributes from another profile.
-
-    :param profile str: The profile with a 'role_arn' attribute.
-    :type profile: str
-    """
+    """ Set the default profile with attributes from another profile. """
     credentials = Credentials()
     credentials.set_default(profile)
     credentials.write()
@@ -153,13 +137,7 @@ def set_default(profile):
 @click.command()
 @click.option("--bastion-sts", help="the profile that assume role profiles will depend on.", default="bastion-sts")
 def set_mfa_serial(bastion_sts):
-    """ Set the 'mfa_serial' attribute for the bastion-sts profile.
-
-    :param bastion_sts: The profile that assume role profiles source.
-    :type bastion_sts: str
-    :raises ValidationError: set-mfa-serial requires your iam user to have
-                             'iam:get_user' and 'iam:list_mfa_devices' permissions.
-    """
+    """ Set the 'mfa_serial' attribute for the bastion-sts profile. """
     try:
         iam = boto3.client('iam')
         username = iam.get_user()["User"]["UserName"]
@@ -189,19 +167,32 @@ def set_mfa_serial(bastion_sts):
 
 
 @click.command()
-def clear_cache():
+@click.option("--bastion", help="The profile containing the long-lived IAM credentials.", default="bastion")
+def clear_cache(bastion):
     """ Clear the bastion-sts credential cache. """
     cache = Cache()
     cache_path = cache.bastion_sts_cache_path
     cache.delete()
-
     click.echo("{} has been removed.".format(cache_path))
+
+    credentials = Credentials()
+    profiles = credentials.config.sections()
+    profiles.remove(bastion) # we don't want to remove the long-lived credentials
+    for profile in profiles:
+        if "aws_access_key_id" in credentials.config[profile]:
+            del credentials.config[profile]["aws_access_key_id"]
+        if "aws_secret_access_key" in credentials.config[profile]:
+            del credentials.config[profile]["aws_secret_access_key"]
+        if "aws_session_token" in credentials.config[profile]:
+            del credentials.config[profile]["aws_session_token"]
+        click.echo("sts credentials were removed from the {} profile.".format(profile))
+    credentials.write()
     return None
 
 
 main.add_command(get_session_token)
 main.add_command(assume_role)
-main.add_command(get_expiration_delta)
+main.add_command(get_expiration)
 main.add_command(set_default)
 main.add_command(set_mfa_serial)
 main.add_command(clear_cache)

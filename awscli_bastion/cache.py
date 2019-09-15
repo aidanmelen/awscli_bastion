@@ -1,12 +1,13 @@
-from datetime import timedelta
 from dateutil.tz import tzutc
 from dateutil.parser import parse
 from os.path import isfile
+import click
 import datetime
 import humanize
 import json
 import os
 import pathlib
+import sys
 
 
 class Cache:
@@ -49,9 +50,14 @@ class Cache:
         :return: How much time until the bastion-sts credentials expire.
         :rtype: str
         """
-        now_dt = datetime.datetime.now(tzutc())
-        expiration_iso = self.read()["Expiration"]
+        try:
+            expiration_iso = self.read()["Expiration"]
+        except KeyError:
+            click.echo("The {} profile did not have the 'aws_session_expiration' attribute.")
+            sys.exit(1)
+
         expiration_dt = parse(expiration_iso)
+        now_dt = datetime.datetime.now(tzutc())
         delta = now_dt - expiration_dt
         return humanize.naturaltime(delta) if human_readable else delta
 
@@ -63,7 +69,6 @@ class Cache:
         :type creds: dict
         """
         creds["Version"] = 1
-        creds["Expiration"] = creds["Expiration"].isoformat()
         with open(self.bastion_sts_cache_path, 'w+') as f:
             json.dump(creds, f, indent=4)
 
@@ -74,4 +79,5 @@ class Cache:
 
     def delete(self):
         """ Deletes the bastion-sts cache file. """
-        os.remove(self.bastion_sts_cache_path)
+        if os.path.isfile(self.bastion_sts_cache_path):
+            os.remove(self.bastion_sts_cache_path)
