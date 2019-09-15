@@ -1,6 +1,8 @@
+from botocore.exceptions import ClientError
 from configparser import ConfigParser
 from dateutil.tz import tzutc
 from dateutil.parser import parse
+import boto3
 import click
 import datetime
 import humanize
@@ -42,7 +44,7 @@ class Credentials:
         try:
             expiration_iso = self.config[profile]["aws_session_expiration"]
         except KeyError:
-            click.echo("The {} profile did not have the 'aws_session_expiration' attribute.")
+            click.echo("The '{}' profile did not have the 'aws_session_expiration' attribute.")
             sys.exit(1)
 
         now_dt = datetime.datetime.now(tzutc())
@@ -62,22 +64,41 @@ class Credentials:
             return self.config[bastion_sts]["mfa_serial"]
         except Exception:
             click.echo("An error occured when getting the mfa_serial from {} profile.".format(bastion_sts))
+            click.echo("Try setting mfa_serial attribute with 'bastion set-mfa-serial' command.")
             sys.exit(1)
 
-    def set_mfa_serial(self, mfa_serial, bastion_sts="bastion_sts"):
+    def set_mfa_serial(self, mfa_serial=None, bastion_sts="bastion_sts"):
         """ Set the 'mfa_serial' attribute for the given profile, typically the bastion-sts profile.
 
         :param mfa_serial: The identification number of the MFA device that is associated with the IAM user.
         :param bastion_sts: The profile that assume role profiles source.
         :type mfa_serial: str
         :type bastion_sts: str
+        :raises ClientError: Failed to get mfa_serial from the iam user.
         :raises Exception: Failed to set mfa_serial for bastion_sts profile.
         """
-        try:
-            self.config[bastion_sts]["mfa_serial"] = mfa_serial
-        except Exception:
-            click.echo("An error occured when setting the mfa_serial for {} profile.".format(bastion_sts))
-            sys.exit(1)
+        if not mfa_serial:
+            try:
+                iam = boto3.client('iam')
+                username = iam.get_user()["User"]["UserName"]
+
+                for iam_mfa_device in iam.list_mfa_devices(UserName=username)["MFADevices"]:
+                    mfa_serial = iam_mfa_device["SerialNumber"]
+                    break   # no need to check another MFA device.
+                else:
+                    click.echo("An error occured when getting the mfa device from current iam user.")
+                    sys.exit(1)
+
+            except ClientError as e:
+                if e.response['Error']['Code'] == 'ValidationError':
+                    click.echo("An error occured when getting the mfa serial number. " \
+                        "Your iam user to have 'iam:get_user' and 'iam:list_mfa_devices' " \
+                        "permissions. \n{}".format(e))
+                else:
+                    click.echo("Unexpected error: {}".format(e))
+                sys.exit(1)
+        
+        self.config[bastion_sts]["mfa_serial"] = mfa_serial
 
     def set_default(self, profile):
         """ Set the default profile with attributes from another profile.
@@ -86,6 +107,37 @@ class Credentials:
         :type profile: str
         """
         self.config['default'] = dict(self.config[profile])
+    
+    def clear(self, bastion="bastion"):
+        """ Clear sts credentials from the aws shared credentials file.
+
+        :param bastion: The profile containing the long-lived IAM credentials.
+        :return: Whether or not any sts credentials were removed from the aws shared credentials file.
+        :rtype: bool
+        """
+        profiles = self.config.sections()
+        profiles.remove(bastion) # we don't want to remove the long-lived credentials
+        click.echo("- Skipping the '{}' profile because it may contain long-lived credentials.".format(bastion))
+
+        for profile in profiles:
+            if "source_profile" not in self.config[profile]:
+                click.echo("- Skipping the '{}' profile because it may contain long-lived credentials.".format(profile))
+                continue
+
+            is_access_key = "aws_access_key_id" in self.config[profile]
+            is_secret_key = "aws_secret_access_key" in self.config[profile]
+            is_session_token = "aws_session_token" in self.config[profile]
+
+            if is_access_key:
+                del self.config[profile]["aws_access_key_id"]
+            if is_secret_key:
+                del self.config[profile]["aws_secret_access_key"]
+            if is_session_token:
+                del self.config[profile]["aws_session_token"]
+
+            if any([is_access_key, is_secret_key, is_session_token]):
+                click.echo("- STS credentials were removed from the {} profile.".format(profile))
+        self.write()
 
     def write(self):
         """ Write credentials to the aws shared credentials file. """

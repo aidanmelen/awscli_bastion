@@ -78,6 +78,13 @@ class Cache:
             return json.load(f)
 
     def delete(self):
-        """ Deletes the bastion-sts cache file. """
+        """ Deletes the bastion-sts cache file.
+        
+        :return: Whether or not the bastion-sts cache file was deleted.
+        :rtype: bool
+        """
         if os.path.isfile(self.bastion_sts_cache_path):
             os.remove(self.bastion_sts_cache_path)
+            click.echo("- Deleted the '{}' file.".format(self.bastion_sts_cache_path))
+        else:
+            click.echo("- Skipping because the '{}' file has already been deleted.".format(self.bastion_sts_cache_path))
