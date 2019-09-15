@@ -47,7 +47,8 @@ Configure
 *~/.aws/credentials*::
 
     # stores long-lived iam user credentials from the bastion account
-    [bastion] # these are fake credentials
+    # these are fake credentials
+    [bastion]
     aws_access_key_id = ASIA554SXDVIHKO5ACW2
     aws_secret_access_key = VLJQKLEqs37HCDG4HgSDrxl1vLNrk9Is8gm0VNfA
 
@@ -87,6 +88,20 @@ Run awscli commands normally and the configured bastion `credential_process`_ as
         "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
         "Account": "123456789012",
         "Arn": "arn:aws:sts::234567890123:assumed-role/admin/botocore-session-1234567890"
+    }
+
+    $ aws sts get-caller-identity --profile stage
+    {
+        "UserId": "BBBBBBBBBBBBBBBBBBBBB:botocore-session-2345678901",
+        "Account": "345678901234",
+        "Arn": "arn:aws:sts::345678901234:assumed-role/poweruser/botocore-session-2345678901"
+    }
+
+    $ aws sts get-caller-identity --profile prod
+    {
+        "UserId": "CCCCCCCCCCCCCCCCCCCCC:botocore-session-3456789012",
+        "Account": "456789012345",
+        "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
     }
 
 If the bastion-sts credentials cache is expired, you will be prompted for your MFA code to new sts credentials.
@@ -150,6 +165,19 @@ Write sts credentials to the aws shared credentials with our ``aws auth`` alias 
     Successfully assumed roles in all AWS accounts!
 
 Now your bastion-sts and assume role profiles will be populated with sts credentials.
+
+We can clear the cached sts credentials with::
+
+    $ bastion clear-cache
+    Clearing the bastion-sts credential cache:
+    - Deleted the '~/.aws/cli/cache/bastion-sts.json' file.
+
+    Clearing sts credentials from the aws shared credentials file:
+    - Skipping the 'bastion' profile because it may contain long-lived credentials.
+    - STS credentials were removed from the bastion-sts profile.
+    - STS credentials were removed from the dev profile.
+    - STS credentials were removed from the stage profile.
+    - STS credentials were removed from the prod profile.
 
 
 Credits

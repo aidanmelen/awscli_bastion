@@ -64,7 +64,7 @@ class Credentials:
             return self.config[bastion_sts]["mfa_serial"]
         except Exception:
             click.echo("An error occured when getting the mfa_serial from {} profile.".format(bastion_sts))
-            click.echo("Try setting mfa_serial attribute with 'bastion set-mfa-serial' command.")
+            click.echo("Try setting mfa_serial attribute with the 'bastion set-mfa-serial' command.")
             sys.exit(1)
 
     def set_mfa_serial(self, mfa_serial=None, bastion_sts="bastion_sts"):
@@ -106,7 +106,12 @@ class Credentials:
         :param profile: The profile with a 'role_arn' attribute.
         :type profile: str
         """
-        self.config['default'] = dict(self.config[profile])
+        try:            
+            self.config['default'] = dict(self.config[profile])
+        except KeyError:
+            click.echo("Failed to set default profile with attributes from '{}' profile".format(profile))
+            click.echo("The '{}' profile is not defined in the {} file.".format(profile, self.aws_shared_credentials_path))
+            sys.exit(1)
     
     def clear(self, bastion="bastion"):
         """ Clear sts credentials from the aws shared credentials file.
@@ -130,6 +135,7 @@ class Credentials:
             is_access_key = "aws_access_key_id" in self.config[profile]
             is_secret_key = "aws_secret_access_key" in self.config[profile]
             is_session_token = "aws_session_token" in self.config[profile]
+            is_expiration = "aws_session_expiration" in self.config[profile]
 
             if is_access_key:
                 del self.config[profile]["aws_access_key_id"]
@@ -137,8 +143,10 @@ class Credentials:
                 del self.config[profile]["aws_secret_access_key"]
             if is_session_token:
                 del self.config[profile]["aws_session_token"]
+            if is_expiration:
+                del self.config[profile]["aws_session_expiration"]
 
-            if any([is_access_key, is_secret_key, is_session_token]):
+            if any([is_access_key, is_secret_key, is_session_token, is_expiration]):
                 click.echo("- STS credentials were removed from the {} profile.".format(profile))
         self.write()
 

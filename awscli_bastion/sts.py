@@ -21,6 +21,15 @@ class STS:
         self.region = region
         self.credentials = credentials
         self.cache = cache
+    
+    def _handle_missing_or_invalid_mfa_code(self, mfa_serial=None):
+        is_mfa_code_invalid = True
+        while is_mfa_code_invalid:
+            mfa_code = getpass.getpass("Enter MFA code for {}: ".format(mfa_serial))
+            is_mfa_code_invalid = len(mfa_code) != 6 or not mfa_code.isdigit()
+            if is_mfa_code_invalid:
+                click.echo("Warning: The MFA code must be 6 digits. For example: 123456")
+        return mfa_code
 
     def get_session_token(self, mfa_code=None, mfa_serial=None,
         duration_seconds=TWELVE_HOURS_IN_SECONDS):
@@ -43,12 +52,12 @@ class STS:
         if not mfa_code and not self.cache.is_expired():
             cached_sts_creds = self.cache.read()
 
-        if not mfa_code and not cached_sts_creds:
-            mfa_code = getpass.getpass("Enter MFA code for {}: ".format(mfa_serial))
-
         if cached_sts_creds:
             sts_creds = cached_sts_creds
         else:
+            if not mfa_code:
+                mfa_code = self._handle_missing_or_invalid_mfa_code(mfa_serial)
+
             session = boto3.Session(profile_name=self.bastion, region_name=self.region)
             sts = session.client("sts")
             try:
