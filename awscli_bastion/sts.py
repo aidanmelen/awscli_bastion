@@ -24,8 +24,8 @@ class STS:
 
     def get_session_token(self, mfa_code=None, mfa_serial=None,
         duration_seconds=TWELVE_HOURS_IN_SECONDS):
-        """ Get the short-lived credentials from sts.get_session_token() 
-        if the 'mfa_code' is provided. Otherwise, try to look up sts credentials from the cache.
+        """ Get the short-lived credentials from sts.get_session_token()
+         if the 'mfa_code' is provided. Otherwise, try to look up sts credentials from the cache.
 
         :param mfa_code: The value provided by the MFA device.
         :type mfa_code: str
@@ -62,10 +62,9 @@ class STS:
             except Exception as e:
                 click.echo(e)
                 sys.exit(1)
-        
+
         self.cache.write(sts_creds)
         return sts_creds
-        
 
     def assume_role(self, profile, duration_seconds=ONE_HOUR_IN_SECONDS):
         """Get the short-lived credentials from sts.assume_role().

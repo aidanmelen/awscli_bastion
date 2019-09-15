@@ -116,7 +116,10 @@ class Credentials:
         :rtype: bool
         """
         profiles = self.config.sections()
-        profiles.remove(bastion) # we don't want to remove the long-lived credentials
+
+        # we don't want to remove the long-lived credentials
+        profiles.remove(bastion)
+
         click.echo("- Skipping the '{}' profile because it may contain long-lived credentials.".format(bastion))
 
         for profile in profiles:

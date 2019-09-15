@@ -1,12 +1,10 @@
 """ Manage the command line interface. """
 
 
-from botocore.exceptions import ClientError
 from datetime import timedelta
 from .credentials import Credentials
 from .cache import Cache
 from .sts import STS
-import boto3
 import sys
 import click
 import json
