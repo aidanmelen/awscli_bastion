@@ -21,10 +21,9 @@ awscli_bastion
 
 awscli_bastion extends the awscli by managing mfa protected short-lived credentials.
 
-.. image:: docs/awscli-bastion.png
-    :width: 200px
+.. image:: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
+    :target: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
     :align: center
-    :height: 100px
 
 
 * Free software: Apache Software License 2.0
@@ -36,37 +35,39 @@ Install
 
 ::
 
-    $ pip install awscli_bastion
+    $ pip install awscli-bastion
 
 
 Configure
 ---------
 
+1. Ensure that your `AWS Bastion`_ account is `configured with mfa-protected api access`_.
+2. Ensure the `awscli`_ is configured as follows:
+
 *~/.aws/credentials*::
 
-    # (required) aws bastion profiles
-
-    [bastion] # these are fake credentials
+    # stores long-lived iam user credentials from the bastion account
+    # these are fake credentials
+    [bastion]
     aws_access_key_id = ASIA554SXDVIHKO5ACW2
     aws_secret_access_key = VLJQKLEqs37HCDG4HgSDrxl1vLNrk9Is8gm0VNfA
 
+    # stores short-lived sts.get_session_token() credentials for the bastion account
     [bastion-sts]
     mfa_serial = arn:aws:iam::123456789012:mfa/aidan-melen
     credential_process = bastion get-session-token
     source_profile = bastion
 
-
-    # (optional) aws assume role profiles
-
-    [dev]
+    # assume role profiles store short-lived sts.assume_role() credentials
+    [dev-admin]
     role_arn = arn:aws:iam::234567890123:role/admin
     source_profile = bastion-sts
 
-    [stage]
+    [stage-poweruser]
     role_arn = arn:aws:iam::345678901234:role/poweruser
     source_profile = bastion-sts
 
-    [prod]
+    [prod-spectator]
     role_arn = arn:aws:iam::456789012345:role/spectator
     source_profile = bastion-sts
 
@@ -76,13 +77,12 @@ Configure
     region = us-west-2
     output = json
 
-
 Usage
 -----
 
-Run awscli commands normally and the bastion credential_process will handle the rest::
+Run awscli commands normally and the configured bastion `credential_process`_ as well as the combination of `role_arn and source_profile`_ will handle the rest::
 
-    $ aws sts get-caller-identity --profile dev
+    $ aws sts get-caller-identity --profile dev-admin
     Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
     {
         "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
@@ -104,7 +104,9 @@ Run awscli commands normally and the bastion credential_process will handle the 
         "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
     }
 
-Renew the bastion-sts credentials cache::
+If the bastion-sts credentials cache is expired, you will be prompted for your MFA code to new sts credentials.
+
+Force the renewal of the bastion-sts credentials cache::
 
     # these are fake credentials
     $ bastion get-session-token --mfa-code 123456
@@ -116,10 +118,10 @@ Renew the bastion-sts credentials cache::
         "Version": 1
     }
 
-Replace default profile with assume_role profile::
+Override the default profile with attributes from an assume role profile::
 
-    $ bastion set-default dev
-    Setting the 'default' profile with attributes from the 'dev' profile.
+    $ bastion set-default dev-admin
+    Setting the 'default' profile with attributes from the 'dev-admin' profile.
 
     $ aws sts get-caller-identity
     {
@@ -132,36 +134,64 @@ Replace default profile with assume_role profile::
 Special Usage
 -------------
 
-Output how much time until the bastion-sts credentials expire::
+awscli-bastion also supports `writing sts credentials to the aws shared credential file`_.
 
-    $ bastion get-expiration-delta                                                                                                       0.3.0
-    The bastion-sts credentials will expire 11 hours from now.
+Configure *~/.aws/cli/alias* to automate these steps for each profile::
 
-Set the mfa serial number::
+    [toplevel]
 
-    $ bastion set-mfa-serial
-    Setting the 'mfa_serial' attribute for the 'bastion-sts' profile.
+    auth =
+        !f() {
+            if [ $# -eq 0 ]
+            then
+                bastion get-session-token --write-to-shared-credentials-file
+            else
+                bastion get-session-token --write-to-shared-credentials-file --mfa-code $1
+            fi
+            bastion assume-role dev-admin
+            bastion assume-role stage-poweruser
+            bastion assume-role prod-spectator
+            echo "Successfully assumed roles in all AWS accounts!"
+        }; f
 
-Reset the bastion credentials cache::
+Write sts credentials to the aws shared credentials with our ``aws auth`` alias command::
+
+    $ aws auth
+    Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
+    Setting the 'bastion-sts' profile with sts get session token credentials.
+    Setting the 'dev-admin' profile with sts assume role credentials.
+    Setting the 'stage-poweruser' profile with sts assume role credentials.
+    Setting the 'prod-spectator' profile with sts assume role credentials.
+    Successfully assumed roles in all AWS accounts!
+
+Now your bastion-sts and assume role profiles will be populated with sts credentials.
+
+We can clear the cached sts credentials with::
 
     $ bastion clear-cache
-    ~/.aws/cli/cache/bastion-sts.json has been removed.
+    Clearing the bastion-sts credential cache:
+    - Deleted the '~/.aws/cli/cache/bastion-sts.json' file.
 
-Write bastion-sts credentials to the aws shared credential file::
+    Clearing sts credentials from the aws shared credentials file:
+    - Skipping the 'bastion' profile because it may contain long-lived credentials.
+    - STS credentials were removed from the bastion-sts profile.
+    - STS credentials were removed from the dev profile.
+    - STS credentials were removed from the stage profile.
+    - STS credentials were removed from the prod profile.
 
-    $ bastion get-session-token --write-to-shared-credentials-file --mfa-code 123456
-    Setting the 'bastion-sts' profile with sts credential attributes.
-
-Write assume role sts credentials to the aws shared credential file::
-
-    $ bastion assume-role dev
-    Setting the 'dev' profile with assume role sts credential attributes.
 
 Credits
 -------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
+
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 .. _Making a python package for pypi: http://otuk.kodeten.com/making-a-python-package-for-pypi---easy-steps
+.. _`AWS Bastion`: https://blog.coinbase.com/you-need-more-than-one-aws-account-aws-bastions-and-assume-role-23946c6dfde3
+.. _`configured with mfa-protected api access`: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_configure-api-require.html
+.. _`awscli`: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+.. _`credential_process`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html
+.. _`role_arn and source_profile`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html
+.. _`writing sts credentials to the aws shared credential file`: https://aws.amazon.com/premiumsupport/knowledge-center/authenticate-mfa-cli/
