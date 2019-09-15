@@ -21,10 +21,9 @@ awscli_bastion
 
 awscli_bastion extends the awscli by managing mfa protected short-lived credentials.
 
-.. image:: docs/awscli-bastion.png
-    :width: 200px
+.. image:: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
+    :target: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
     :align: center
-    :height: 100px
 
 
 * Free software: Apache Software License 2.0
