@@ -136,11 +136,11 @@ Special Usage
 
 awscli-bastion also supports `writing sts credentials to the aws shared credential file`_.
 
-Configure *~/.aws/cli/alias* to automate these steps for each profile::
+Configure *~/.aws/cli/alias* to automate the steps for each profile::
 
     [toplevel]
 
-    auth =
+    bastion =
         !f() {
             if [ $# -eq 0 ]
             then
@@ -156,7 +156,7 @@ Configure *~/.aws/cli/alias* to automate these steps for each profile::
 
 Write sts credentials to the aws shared credentials with our ``aws auth`` alias command::
 
-    $ aws auth
+    $ aws bastion
     Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
     Setting the 'bastion-sts' profile with sts get session token credentials.
     Setting the 'dev-admin' profile with sts assume role credentials.
@@ -178,6 +178,34 @@ We can clear the cached sts credentials with::
     - STS credentials were removed from the dev profile.
     - STS credentials were removed from the stage profile.
     - STS credentials were removed from the prod profile.
+
+Bastion Minimal
+---------------
+
+If you are like me, you do not trust an open-source tools and libraries to handle admin 
+credentials to your aws accounts. awscli_bastion/minimal.py is written as a script that offers 
+minimal bastion functionality. It is intended to be quick and easy to understand. 
+A minimal number of python libraries are used to reduce security risks.
+
+Configure 'bastion-minimal' in *~/.aws/cli/alias* to automate the steps for each profile::
+
+    [toplevel]
+
+    bastion-minimal =
+        !f() {
+            TOKEN_CODE=$1
+
+            bastion-minimal dev-admin $TOKEN_CODE
+            bastion-minimal stage-poweruser
+            bastion-minimal prod-spectator
+
+            if [ $? == 0 ]
+            then
+                echo "Successfully assumed roles in all AWS accounts!"
+            else
+                echo "Failed to assumed roles in all AWS accounts :("
+            fi
+        }; f
 
 
 Credits

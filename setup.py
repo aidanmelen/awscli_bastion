@@ -35,6 +35,7 @@ setup(
     entry_points={
         'console_scripts': [
             'bastion=awscli_bastion.cli:main',
+            'bastion-minimal=awscli_bastion.minimal:main'
         ],
     },
     install_requires=requirements,
