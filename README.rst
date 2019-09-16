@@ -216,6 +216,9 @@ Write sts credentials to the aws shared credentials with our ``aws bastion-minim
     Setting the 'prod-spectator' profile with sts assume role credentials.
     Successfully assumed roles in all AWS accounts!
 
+Now your bastion-sts and assume role profiles will be populated with sts credentials.
+
+
 Credits
 -------
 
