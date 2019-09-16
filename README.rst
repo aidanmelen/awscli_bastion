@@ -154,7 +154,7 @@ Configure *~/.aws/cli/alias* to automate the steps for each profile::
             echo "Successfully assumed roles in all AWS accounts!"
         }; f
 
-Write sts credentials to the aws shared credentials with our ``aws auth`` alias command::
+Write sts credentials to the aws shared credentials with our ``aws bastion`` alias command::
 
     $ aws bastion
     Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
@@ -207,6 +207,13 @@ Configure 'bastion-minimal' in *~/.aws/cli/alias* to automate the steps for each
             fi
         }; f
 
+Write sts credentials to the aws shared credentials with our ``aws bastion-minimal`` alias command::
+
+    Setting the 'bastion-sts' profile with sts get session token credentials.
+    Setting the 'dev-admin' profile with sts assume role credentials.
+    Setting the 'stage-poweruser' profile with sts assume role credentials.
+    Setting the 'prod-spectator' profile with sts assume role credentials.
+    Successfully assumed roles in all AWS accounts!
 
 Credits
 -------
