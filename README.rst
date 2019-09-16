@@ -182,8 +182,8 @@ We can clear the cached sts credentials with::
 Bastion Minimal
 ---------------
 
-If you are like me, you do not trust an open-source tools and libraries to handle admin 
-credentials to your aws accounts. awscli_bastion/minimal.py is written as a script that offers 
+If you are like me, you do not trust open-source tools and libraries to handle admin 
+credentials for your aws accounts. awscli_bastion/minimal.py is written as a script that offers 
 minimal bastion functionality. It is intended to be quick and easy to understand. 
 A minimal number of python libraries are used to reduce security risks.
 
