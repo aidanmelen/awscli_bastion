@@ -23,6 +23,9 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 import awscli_bastion
+import boto3
+import botocore
+import dateutil
 
 # -- General configuration ---------------------------------------------
 
