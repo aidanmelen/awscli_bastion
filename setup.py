@@ -31,7 +31,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    description="awscli_bastion extends the awscli by managing mfa protected short-lived credentials.",
+    description="awscli-bastion extends the awscli by managing mfa protected short-lived credentials for an aws bastion account.",
     entry_points={
         'console_scripts': [
             'bastion=awscli_bastion.cli:main',
