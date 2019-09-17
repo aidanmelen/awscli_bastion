@@ -169,7 +169,7 @@ Configure the ``aws bastion-minimal`` alias sub-command in the *~/.aws/cli/alias
 
 Write sts credentials to the *~/.aws/credentials* file with our ``aws bastion-minimal`` alias command::
 
-    $ aws bastion 123456
+    $ aws bastion-minimal 123456
     Setting the 'bastion-sts' profile with sts get session token credentials.
     Setting the 'dev-admin' profile with sts assume role credentials.
     Setting the 'stage-poweruser' profile with sts assume role credentials.

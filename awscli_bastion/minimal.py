@@ -28,8 +28,8 @@ def main():
 
     if len(args) == 0:
         print("python auth.py ASSUME_ROLE_PROFILE TOKEN_CODE")
-        print("python auth.py dev 123456")
-        print("python auth.py dev")
+        print("python auth.py dev-admin 123456")
+        print("python auth.py dev-admin")
         sys.exit(1)
     if len(args) >= 1:
         assume_role_profile = args[0]
