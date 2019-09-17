@@ -103,10 +103,9 @@ class STS:
         
         timestamp = datetime.datetime.now(tzutc()).strftime("%Y-%m-%d")
         try:
-            ses = boto3.Session(profile_name=self.bastion, region_name=self.region)
-            iam = ses.client('iam')
-            iam_user = iam.get_user()
-            role_session_name = "{}-{}".format(iam_user, timestamp)
+            iam = boto3.client('iam')
+            username = iam.get_user()["User"]["UserName"]
+            role_session_name = "{}-{}".format(username, timestamp)
         except Exception:
             role_session_name = "bastion-assume-role-{}".format(timestamp)
 
