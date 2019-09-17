@@ -100,12 +100,20 @@ class STS:
         except Exception:
             click.echo("An error occured when getting the role_arn from '{}' profile.".format(profile))
             sys.exit(1)
+        
+        timestamp = datetime.datetime.now(tzutc()).strftime("%Y-%m-%d")
+        try:
+            ses = boto3.Session(profile_name=self.bastion, region_name=self.region)
+            iam = ses.client('iam')
+            iam_user = iam.get_user()
+            role_session_name = "{}-{}".format(iam_user, timestamp)
+        except Exception:
+            role_session_name = "bastion-assume-role-{}".format(timestamp)
 
         try:
-            timestamp = datetime.datetime.now(tzutc()).strftime("%Y-%m-%d")
             sts_creds = sts.assume_role(
                 RoleArn=role_arn,
-                RoleSessionName="bastion-assume-role-{}".format(timestamp),
+                RoleSessionName=role_session_name,
                 DurationSeconds=duration_seconds
             )["Credentials"]
         except ClientError as e:

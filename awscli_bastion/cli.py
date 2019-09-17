@@ -39,9 +39,6 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
     )
     sts_creds = sts.get_session_token(mfa_code=mfa_code, mfa_serial=mfa_serial, duration_seconds=duration_seconds)
 
-    # stdout for awscli credential_process
-    click.echo(json.dumps(sts_creds, indent=4))
-
     if write_to_aws_shared_credentials_file:
         credentials.config[bastion_sts]["aws_access_key_id"] = sts_creds["AccessKeyId"]
         credentials.config[bastion_sts]["aws_secret_access_key"] = sts_creds["SecretAccessKey"]
@@ -49,6 +46,9 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
         credentials.config[bastion_sts]["aws_session_expiration"] = sts_creds["Expiration"]
         credentials.write()
         click.echo("Setting the '{}' profile with sts get session token credentials.".format(bastion_sts))
+    else:
+        # stdout for awscli credential_process
+        click.echo(json.dumps(sts_creds, indent=4))
 
     return None
 
