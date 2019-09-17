@@ -31,10 +31,11 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    description="awscli_bastion extends the awscli by managing mfa protected short-lived credentials.",
+    description="awscli-bastion extends the awscli by managing mfa protected short-lived credentials for an aws bastion account.",
     entry_points={
         'console_scripts': [
             'bastion=awscli_bastion.cli:main',
+            'bastion-minimal=awscli_bastion.minimal:main'
         ],
     },
     install_requires=requirements,
@@ -48,6 +49,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/aidanmelen/awscli_bastion',
-    version='0.5.0',
+    version='0.6.0',
     zip_safe=False,
 )

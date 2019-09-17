@@ -28,6 +28,14 @@ awscli\_bastion.credentials module
    :undoc-members:
    :show-inheritance:
 
+awscli\_bastion.minimal module
+------------------------------
+
+.. automodule:: awscli_bastion.minimal
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 awscli\_bastion.sts module
 --------------------------
 

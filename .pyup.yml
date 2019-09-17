@@ -10,4 +10,4 @@ branch: master
 # update schedule
 # default: empty
 # allowed: "every day", "every week", ..
-schedule: "every day"
+schedule: "every week"

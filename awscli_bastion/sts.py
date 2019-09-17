@@ -22,7 +22,14 @@ class STS:
         self.credentials = credentials
         self.cache = cache
     
-    def _handle_missing_or_invalid_mfa_code(self, mfa_serial=None):
+    def _get_mfa_code(self, mfa_serial):
+        """ Prompt the user for the mfa code and return it.
+
+        :param mfa_serial: The identification number of the MFA device that is associated with the IAM user.
+        :type mfa_serial: str
+        :return: 6 digit mfa code
+        :rtype: str
+        """
         is_mfa_code_invalid = True
         while is_mfa_code_invalid:
             mfa_code = getpass.getpass("Enter MFA code for {}: ".format(mfa_serial))
@@ -56,7 +63,7 @@ class STS:
             sts_creds = cached_sts_creds
         else:
             if not mfa_code:
-                mfa_code = self._handle_missing_or_invalid_mfa_code(mfa_serial)
+                mfa_code = self._get_mfa_code(mfa_serial)
 
             session = boto3.Session(profile_name=self.bastion, region_name=self.region)
             sts = session.client("sts")
