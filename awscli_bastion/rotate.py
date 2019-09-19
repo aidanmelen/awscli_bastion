@@ -64,9 +64,9 @@ class Rotate:
         self.credentials.config[self.bastion]["aws_secret_access_key"] = ""
     
     def write(self, access_key):
-        """ Write access key to the bastion profile in the share credentials file.
+        """ Write access key to the bastion profile in the aws share credentials file.
 
-        :param access_key: The aws access key access key to verify.
+        :param access_key: The aws access key access key to write.
         :type access_key: str
         """
         self.credentials.config[self.bastion]["aws_access_key_id"] = access_key["AccessKey"]["AccessKeyId"]
