@@ -8,6 +8,7 @@ from .sts import STS
 from .rotate import Rotate
 import sys
 import click
+import humanize
 import json
 import time
 
@@ -66,6 +67,13 @@ def assume_role(profile, duration_seconds, repeat_seconds, repeat_number, bastio
     """Set the profile with short-lived credentials from sts.assume_role(). """
     credentials = Credentials()
 
+    is_repeating = repeat_seconds and repeat_number
+    if is_repeating:
+        humanized_repeat_duration = humanize.naturaldelta(repeat_seconds)
+        humanized_repeat_number = "{} {}".format(repeat_number, "time" if repeat_number == 1 else "times")
+        print("Setting the '{}' profile with sts assume role credentials every {} and will repeat {}.".format(
+            profile, humanized_repeat_duration, humanized_repeat_number))
+
     repeat_iter = 0
     while repeat_iter < repeat_number:
         sts = STS(
@@ -81,10 +89,11 @@ def assume_role(profile, duration_seconds, repeat_seconds, repeat_number, bastio
         credentials.config[profile]["aws_session_expiration"] = sts_creds["Expiration"].isoformat()
         credentials.write()
 
-        click.echo("Setting the '{}' profile with sts assume role credentials.".format(profile))
+        if not is_repeating:
+            click.echo("Setting the '{}' profile with sts assume role credentials.".format(profile))
 
         repeat_iter+=1
-        if repeat_seconds and repeat_number:
+        if is_repeating:
             time.sleep(repeat_seconds)
 
     return None
