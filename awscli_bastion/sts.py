@@ -21,6 +21,9 @@ class STS:
         self.region = region
         self.credentials = credentials
         self.cache = cache
+
+    def is_mfa_code_invalid(self, mfa_code):
+        return len(mfa_code) != 6 or not mfa_code.isdigit()
     
     def _get_mfa_code(self, mfa_serial):
         """ Prompt the user for the mfa code and return it.
@@ -33,7 +36,7 @@ class STS:
         is_mfa_code_invalid = True
         while is_mfa_code_invalid:
             mfa_code = getpass.getpass("Enter MFA code for {}: ".format(mfa_serial))
-            is_mfa_code_invalid = len(mfa_code) != 6 or not mfa_code.isdigit()
+            is_mfa_code_invalid = self.is_mfa_code_invalid(mfa_code)
             if is_mfa_code_invalid:
                 click.echo("Warning: The MFA code must be 6 digits. For example: 123456")
         return mfa_code
@@ -62,7 +65,7 @@ class STS:
         if cached_sts_creds:
             sts_creds = cached_sts_creds
         else:
-            if not mfa_code:
+            if not mfa_code or self.is_mfa_code_invalid(mfa_code):
                 mfa_code = self._get_mfa_code(mfa_serial)
 
             session = boto3.Session(profile_name=self.bastion, region_name=self.region)

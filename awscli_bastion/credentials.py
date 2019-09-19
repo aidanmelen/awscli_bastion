@@ -7,6 +7,7 @@ import click
 import datetime
 import humanize
 import pathlib
+import os
 import sys
 
 
@@ -14,8 +15,7 @@ class Credentials:
     """ Manage getting and setting attributes for the aws shared credentials file. """
 
     def __init__(self):
-        self.home = str(pathlib.Path.home())
-        self.aws_shared_credentials_path = "{}/.aws/credentials".format(self.home)
+        self.aws_shared_credentials_path = os.path.join(pathlib.Path.home(), ".aws/credentials")
         self.config = ConfigParser()
         self.config.read(self.aws_shared_credentials_path)
 
@@ -117,6 +117,7 @@ class Credentials:
         """ Clear sts credentials from the aws shared credentials file.
 
         :param bastion: The profile containing the long-lived IAM credentials.
+        :type bastion: str
         :return: Whether or not any sts credentials were removed from the aws shared credentials file.
         :rtype: bool
         """

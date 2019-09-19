@@ -5,9 +5,11 @@ from datetime import timedelta
 from .credentials import Credentials
 from .cache import Cache
 from .sts import STS
+from .rotate import Rotate
 import sys
 import click
 import json
+import time
 
 
 @click.group()
@@ -56,26 +58,35 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
 @click.command()
 @click.argument("profile")
 @click.option("--duration-seconds", help="The duration, in seconds, that the credentials should remain valid.", default=timedelta(hours=1).seconds)
+@click.option("--repeat-seconds", help="The duration, in seconds, until assume_role will renew credentials.", default=0)
+@click.option("--repeat-number", help="The number of repeated times assume_role will be called.", default=1)
 @click.option("--bastion-sts", help="The profile that assume role profiles source.", default="bastion-sts")
 @click.option("--region", help="The region used when creating new AWS connections.", default="us-west-2")
-def assume_role(profile, duration_seconds, bastion_sts, region):
+def assume_role(profile, duration_seconds, repeat_seconds, repeat_number, bastion_sts, region):
     """Set the profile with short-lived credentials from sts.assume_role(). """
     credentials = Credentials()
 
-    sts = STS(
-        bastion_sts=bastion_sts,
-        region=region,
-        credentials=credentials
-    )
-    sts_creds = sts.assume_role(profile, duration_seconds=duration_seconds)
+    repeat_iter = 0
+    while repeat_iter < repeat_number:
+        sts = STS(
+            bastion_sts=bastion_sts,
+            region=region,
+            credentials=credentials
+        )
+        sts_creds = sts.assume_role(profile, duration_seconds=duration_seconds)
 
-    credentials.config[profile]["aws_access_key_id"] = sts_creds["AccessKeyId"]
-    credentials.config[profile]["aws_secret_access_key"] = sts_creds["SecretAccessKey"]
-    credentials.config[profile]["aws_session_token"] = sts_creds["SessionToken"]
-    credentials.config[profile]["aws_session_expiration"] = sts_creds["Expiration"].isoformat()
-    credentials.write()
+        credentials.config[profile]["aws_access_key_id"] = sts_creds["AccessKeyId"]
+        credentials.config[profile]["aws_secret_access_key"] = sts_creds["SecretAccessKey"]
+        credentials.config[profile]["aws_session_token"] = sts_creds["SessionToken"]
+        credentials.config[profile]["aws_session_expiration"] = sts_creds["Expiration"].isoformat()
+        credentials.write()
 
-    click.echo("Setting the '{}' profile with sts assume role credentials.".format(profile))
+        click.echo("Setting the '{}' profile with sts assume role credentials.".format(profile))
+
+        repeat_iter+=1
+        if repeat_seconds and repeat_number:
+            time.sleep(repeat_seconds)
+
     return None
 
 
@@ -117,6 +128,24 @@ def get_expiration(bastion_sts):
 
 
 @click.command()
+@click.option("--username", help="The username whos long-lived access key will be rotated.", default=None)
+@click.option('--deactivate', help="Whether or not to deactivate the access key. Otherwise, it will be deleted during rotation.", is_flag=True)
+@click.option("--bastion", help="The profile containing the long-lived IAM credentials.", default="bastion")
+@click.option("--bastion-sts", help="The profile that assume role profiles will depend on.", default="bastion-sts")
+@click.option("--region", help="The region used when creating new AWS connections.", default="us-west-2")
+def rotate_access_keys(username, deactivate, bastion, bastion_sts, region):
+    """ Rotate the bastion long-lived access key id and secret access keys. """
+
+    credentials = Credentials()
+    rotate = Rotate(
+        username=username, deactivate=deactivate,
+        bastion=bastion, bastion_sts=bastion_sts,
+        region=region, credentials=credentials
+    )
+    rotate.rotate()
+
+
+@click.command()
 @click.option("--bastion", help="The profile containing the long-lived IAM credentials.", default="bastion")
 def clear_cache(bastion):
     """ Clear the bastion-sts credential cache and sts credentials from the aws shared credentials file. """
@@ -137,6 +166,7 @@ main.add_command(assume_role)
 main.add_command(set_default)
 main.add_command(set_mfa_serial)
 main.add_command(get_expiration)
+main.add_command(rotate_access_keys)
 main.add_command(clear_cache)
 
 if __name__ == "__main__":

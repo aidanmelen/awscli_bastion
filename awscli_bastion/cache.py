@@ -14,8 +14,8 @@ class Cache:
     """ Manage the bastion-sts credential cache (~/.aws/cli/cache/bastion-sts.json). """
 
     def __init__(self):
-        self.home = str(pathlib.Path.home())
-        self.bastion_sts_cache_path = "{}/.aws/cli/cache/bastion-sts.json".format(self.home)
+        self.aws_shared_cache_path = os.path.join(pathlib.Path.home(), ".aws/cli/cache")
+        self.bastion_sts_cache_path = os.path.join(self.aws_shared_cache_path, "bastion-sts.json")
 
     def does_exist(self):
         """ Return whether or not the bastion-sts credential cache exists.
@@ -78,13 +78,11 @@ class Cache:
             return json.load(f)
 
     def delete(self):
-        """ Deletes the bastion-sts cache file.
-        
-        :return: Whether or not the bastion-sts cache file was deleted.
-        :rtype: bool
-        """
-        if os.path.isfile(self.bastion_sts_cache_path):
-            os.remove(self.bastion_sts_cache_path)
-            click.echo("- Deleted the '{}' file.".format(self.bastion_sts_cache_path))
+        """ Deletes the cache files in the aws shared cache directory.  """
+        cache_files = os.listdir(self.aws_shared_cache_path)
+        if cache_files:
+            for cache in os.listdir(self.aws_shared_cache_path):
+                os.remove(os.path.join(self.aws_shared_cache_path, cache))
+                click.echo("- Deleted the '{}' file.".format(cache))
         else:
-            click.echo("- Skipping because the '{}' file has already been deleted.".format(self.bastion_sts_cache_path))
+            click.echo("- No cache files to delete.")
