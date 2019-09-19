@@ -43,19 +43,16 @@ Configure
 
 *~/.aws/credentials*::
 
-    # stores long-lived iam user credentials from the bastion account
     # these are fake credentials
     [bastion]
     aws_access_key_id = ASIA554SXDVIHKO5ACW2
     aws_secret_access_key = VLJQKLEqs37HCDG4HgSDrxl1vLNrk9Is8gm0VNfA
 
-    # stores short-lived sts.get_session_token() credentials for the bastion account
     [bastion-sts]
     mfa_serial = arn:aws:iam::123456789012:mfa/aidan-melen
     credential_process = bastion get-session-token
     source_profile = bastion
 
-    # assume role profiles store short-lived sts.assume_role() credentials
     [dev-admin]
     role_arn = arn:aws:iam::234567890123:role/admin
     source_profile = bastion-sts
