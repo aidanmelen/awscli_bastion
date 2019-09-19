@@ -6,7 +6,7 @@ import time
 import sys
 
 class Rotate:
-    """ Manages the creation, verification, deletion/deactivation, replacment of aws access keys for the bastion account. """
+    """ Manages the creation, verification, deletion or deactivation, replacment of aws access keys for the bastion account. """
 
     def __init__(self, deactivate=False, username=None, bastion="bastion", bastion_sts="bastion-sts", region="us-west-2", credentials=None):
         self.deactivate = deactivate
@@ -26,7 +26,7 @@ class Rotate:
             sys.exit(1)
 
     def create_access_key(self):
-        """ Create new aws access key. """
+        """ Create aws access key for the bastion profile. """
         try:
             iam_client = self.bastion_sts_session.client("iam")
             return iam_client.create_access_key(UserName=self.username)
@@ -49,7 +49,10 @@ class Rotate:
         return True
 
     def retire_bastion_access_key(self):
-        """ Retire bastion access key. """
+        """
+        Retire aws access key for the bastion profile.
+        By default, this means deletion. Specify the 'deactivate' class variable to deactivate.
+        """
         bastion_aws_access_key_id = self.credentials.config.get(
             self.bastion, 'aws_access_key_id', fallback=None)
 
