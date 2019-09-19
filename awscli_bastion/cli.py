@@ -59,42 +59,25 @@ def get_session_token(duration_seconds, mfa_serial, mfa_code,
 @click.command()
 @click.argument("profile")
 @click.option("--duration-seconds", help="The duration, in seconds, that the credentials should remain valid.", default=timedelta(hours=1).seconds)
-@click.option("--repeat-seconds", help="The duration, in seconds, until assume_role will renew credentials.", default=0)
-@click.option("--repeat-number", help="The number of repeated times assume_role will be called.", default=1)
 @click.option("--bastion-sts", help="The profile that assume role profiles source.", default="bastion-sts")
 @click.option("--region", help="The region used when creating new AWS connections.", default="us-west-2")
-def assume_role(profile, duration_seconds, repeat_seconds, repeat_number, bastion_sts, region):
+def assume_role(profile, duration_seconds, bastion_sts, region):
     """Set the profile with short-lived credentials from sts.assume_role(). """
     credentials = Credentials()
+    sts = STS(
+        bastion_sts=bastion_sts,
+        region=region,
+        credentials=credentials
+    )
+    sts_creds = sts.assume_role(profile, duration_seconds=duration_seconds)
 
-    is_repeating = repeat_seconds and repeat_number
-    if is_repeating:
-        humanized_repeat_duration = humanize.naturaldelta(repeat_seconds)
-        humanized_repeat_number = "{} {}".format(repeat_number, "time" if repeat_number == 1 else "times")
-        print("Setting the '{}' profile with sts assume role credentials every {} and will repeat {}.".format(
-            profile, humanized_repeat_duration, humanized_repeat_number))
+    credentials.config[profile]["aws_access_key_id"] = sts_creds["AccessKeyId"]
+    credentials.config[profile]["aws_secret_access_key"] = sts_creds["SecretAccessKey"]
+    credentials.config[profile]["aws_session_token"] = sts_creds["SessionToken"]
+    credentials.config[profile]["aws_session_expiration"] = sts_creds["Expiration"].isoformat()
+    credentials.write()
 
-    repeat_iter = 0
-    while repeat_iter < repeat_number:
-        sts = STS(
-            bastion_sts=bastion_sts,
-            region=region,
-            credentials=credentials
-        )
-        sts_creds = sts.assume_role(profile, duration_seconds=duration_seconds)
-
-        credentials.config[profile]["aws_access_key_id"] = sts_creds["AccessKeyId"]
-        credentials.config[profile]["aws_secret_access_key"] = sts_creds["SecretAccessKey"]
-        credentials.config[profile]["aws_session_token"] = sts_creds["SessionToken"]
-        credentials.config[profile]["aws_session_expiration"] = sts_creds["Expiration"].isoformat()
-        credentials.write()
-
-        if not is_repeating:
-            click.echo("Setting the '{}' profile with sts assume role credentials.".format(profile))
-
-        repeat_iter+=1
-        if is_repeating:
-            time.sleep(repeat_seconds)
+    click.echo("Setting the '{}' profile with sts assume role credentials.".format(profile))
 
     return None
 
