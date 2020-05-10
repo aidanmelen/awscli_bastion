@@ -67,9 +67,12 @@ class Cache:
         :param creds: bastion-sts short-lived credentials.
         :type creds: bool
         :type creds: dict
-        """
-        creds["Version"] = 1
+        """    
+        if not os.path.isdir(self.aws_shared_cache_path):
+            os.mkdirs(self.aws_shared_cache_path)
+
         with open(self.bastion_sts_cache_path, 'w+') as f:
+            creds["Version"] = 1
             json.dump(creds, f, indent=4)
 
     def read(self):
