@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: awscli-bastion
-Version: 0.9.1
+Version: 0.9.2
 Summary: awscli-bastion extends the awscli by managing mfa protected short-lived credentials for an aws bastion account.
 Home-page: https://github.com/aidanmelen/awscli_bastion
 Author: Aidan Melen
