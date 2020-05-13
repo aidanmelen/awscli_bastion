@@ -1,3 +1,4 @@
-Click
+awscli
 boto3
+Click
 humanize

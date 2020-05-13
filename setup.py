@@ -11,7 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ 'Click', 'boto3', 'humanize' ]
+requirements = [ 'awscli', 'boto3', 'Click', 'humanize' ]
 
 setup_requirements = [ 'sphinx', 'twine', 'bumpversion' ]
 
