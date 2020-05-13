@@ -11,7 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ 'awscli' ]
+requirements = [ 'awscli', 'boto3', 'Click', 'humanize' ]
 
 setup_requirements = [ 'sphinx', 'twine', 'bumpversion' ]
 
@@ -49,6 +49,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/aidanmelen/awscli_bastion',
-    version='0.9.0',
+    version='0.9.4',
     zip_safe=False,
 )
