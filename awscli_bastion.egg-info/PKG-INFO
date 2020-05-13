@@ -1,0 +1,222 @@
+Metadata-Version: 1.2
+Name: awscli-bastion
+Version: 0.9.1
+Summary: awscli-bastion extends the awscli by managing mfa protected short-lived credentials for an aws bastion account.
+Home-page: https://github.com/aidanmelen/awscli_bastion
+Author: Aidan Melen
+Author-email: aidan.l.melen@gmail.com
+License: MIT license
+Description: ==============
+        awscli_bastion
+        ==============
+        
+        .. image:: https://img.shields.io/pypi/v/awscli_bastion.svg
+                :target: https://pypi.python.org/pypi/awscli_bastion
+        
+        .. image:: https://img.shields.io/travis/aidanmelen/awscli_bastion.svg
+                :target: https://travis-ci.org/aidanmelen/awscli_bastion
+        
+        .. image:: https://readthedocs.org/projects/awscli-bastion/badge/?version=latest
+                :target: https://awscli-bastion.readthedocs.io/en/latest/?badge=latest
+                :alt: Documentation Status
+        
+        
+        .. image:: https://pyup.io/repos/github/aidanmelen/awscli_bastion/shield.svg
+                :target: https://pyup.io/repos/github/aidanmelen/awscli_bastion/
+                :alt: Updates
+        
+        * Free software: Apache Software License 2.0
+        * Documentation: https://awscli-bastion.readthedocs.io.
+        
+        `awscli-bastion`_ extends the `awscli`_ by managing mfa protected short-lived credentials for an `AWS Bastion`_ account.
+        
+        .. image:: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
+            :target: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
+            :align: center
+        
+        
+        Install
+        -------
+        
+        ::
+        
+            $ pip install awscli-bastion
+        
+        
+        Configure
+        ---------
+        
+        1. Ensure that your `AWS Bastion`_ account is `configured to use multi-factor authentication and iam roles`_.
+        2. Ensure the ``awscli`` is configured as follows:
+        
+        *~/.aws/credentials*::
+        
+            # these are fake credentials
+            [bastion]
+            aws_access_key_id = ASIA554SXDVIHKO5ACW2
+            aws_secret_access_key = VLJQKLEqs37HCDG4HgSDrxl1vLNrk9Is8gm0VNfA
+        
+            [bastion-sts]
+            mfa_serial = arn:aws:iam::123456789012:mfa/aidan-melen
+            credential_process = bastion get-session-token
+            source_profile = bastion
+        
+            [dev-admin]
+            role_arn = arn:aws:iam::234567890123:role/admin
+            source_profile = bastion-sts
+        
+            [stage-poweruser]
+            role_arn = arn:aws:iam::345678901234:role/poweruser
+            source_profile = bastion-sts
+        
+            [prod-spectator]
+            role_arn = arn:aws:iam::456789012345:role/spectator
+            source_profile = bastion-sts
+        
+        *~/.aws/config*::
+        
+            [default]
+            region = us-west-2
+            output = json
+        
+        Usage
+        -----
+        
+        Run ``aws`` commands normally and the `credential_process`_, `role_arn, and source_profile`_ will handle the rest::
+        
+            $ aws sts get-caller-identity --profile dev-admin
+            Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
+            {
+                "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
+                "Account": "123456789012",
+                "Arn": "arn:aws:sts::234567890123:assumed-role/admin/botocore-session-1234567890"
+            }
+        
+            $ aws sts get-caller-identity --profile stage
+            {
+                "UserId": "BBBBBBBBBBBBBBBBBBBBB:botocore-session-2345678901",
+                "Account": "345678901234",
+                "Arn": "arn:aws:sts::345678901234:assumed-role/poweruser/botocore-session-2345678901"
+            }
+        
+            $ aws sts get-caller-identity --profile prod
+            {
+                "UserId": "CCCCCCCCCCCCCCCCCCCCC:botocore-session-3456789012",
+                "Account": "456789012345",
+                "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
+            }
+        
+        You will only be prompted for the mfa code when the cached bastion-sts credentials expire.
+        
+        Special Usage
+        -------------
+        
+        The ``bastion`` sub-commands support writing credentials to the *~/.aws/credentials* file in addition to the *~/.aws/cli/cache* directory.
+        This is required for tools such as `terraform <https://www.terraform.io/>`_ that do not support the awscli cache.
+        
+        Configure the ``aws bastion`` alias sub-command in the *~/.aws/cli/alias* to automate the steps for each profile::
+        
+            [toplevel]
+        
+            bastion =
+                !f() {
+                    if [ $# -eq 0 ]
+                    then
+                        bastion get-session-token --write-to-aws-shared-credentials-file
+                    else
+                        bastion get-session-token --write-to-aws-shared-credentials-file --mfa-code $1
+                    fi
+                    bastion assume-role dev-admin
+                    bastion assume-role stage-poweruser
+                    bastion assume-role prod-spectator
+                    echo "Successfully assumed roles in all AWS accounts!"
+                }; f
+        
+        Write sts credentials to the aws shared credentials with our ``aws bastion`` alias command::
+        
+            $ aws bastion
+            Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
+            Setting the 'bastion-sts' profile with sts get session token credentials.
+            Setting the 'dev-admin' profile with sts assume role credentials.
+            Setting the 'stage-poweruser' profile with sts assume role credentials.
+            Setting the 'prod-spectator' profile with sts assume role credentials.
+            Successfully assumed roles in all AWS accounts!
+        
+        Now your bastion-sts and assume role profiles will be populated with sts credentials.
+        
+        Bastion Minimal
+        ---------------
+        
+        If you are like me, you do not trust open-source tools and libraries to handle admin 
+        credentials for your aws accounts. `awscli_bastion/minimal.py <https://github.com/aidanmelen/awscli_bastion/blob/master/awscli_bastion/minimal.py>`_ is written as a script that offers 
+        minimal bastion functionality. It is intended to be quick and easy to understand. 
+        A minimal number of python libraries are used to reduce security risks.
+        
+        Configure the ``aws bastion-minimal`` alias sub-command in the *~/.aws/cli/alias* to automate the steps for each profile::
+        
+            [toplevel]
+        
+            bastion-minimal =
+                !f() {
+                    TOKEN_CODE=$1
+        
+                    bastion-minimal dev-admin $TOKEN_CODE
+                    bastion-minimal stage-poweruser
+                    bastion-minimal prod-spectator
+        
+                    if [ $? == 0 ]
+                    then
+                        echo "Successfully assumed roles in all AWS accounts!"
+                    else
+                        echo "Failed to assumed roles in all AWS accounts :("
+                    fi
+                }; f
+        
+        Write sts credentials to the *~/.aws/credentials* file with our ``aws bastion-minimal`` alias command::
+        
+            $ aws bastion-minimal 123456
+            Setting the 'bastion-sts' profile with sts get session token credentials.
+            Setting the 'dev-admin' profile with sts assume role credentials.
+            Setting the 'stage-poweruser' profile with sts assume role credentials.
+            Setting the 'prod-spectator' profile with sts assume role credentials.
+            Successfully assumed roles in all AWS accounts!
+        
+        Now your bastion-sts and assume role profiles will be populated with sts credentials.
+        
+        
+        Credits
+        -------
+        
+        This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
+        
+        .. _`awscli-bastion`: https://pypi.org/project/awscli-bastion/
+        .. _`AWS Bastion`: https://blog.coinbase.com/you-need-more-than-one-aws-account-aws-bastions-and-assume-role-23946c6dfde3
+        .. _`configured to use multi-factor authentication and iam roles`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-role-prepare
+        .. _`awscli`: https://pypi.org/project/awscli/
+        .. _`credential_process`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html
+        .. _`role_arn, and source_profile`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html
+        .. _`writing sts credentials to the aws shared credential file`: https://aws.amazon.com/premiumsupport/knowledge-center/authenticate-mfa-cli/
+        .. _Cookiecutter: https://github.com/audreyr/cookiecutter
+        .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+        .. _Making a python package for pypi: http://otuk.kodeten.com/making-a-python-package-for-pypi---easy-steps
+        
+        =======
+        History
+        =======
+        
+        0.1.0 (2019-09-13)
+        ------------------
+        
+        * First release on PyPI.
+        
+Keywords: awscli_bastion
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Python: >=3.5
