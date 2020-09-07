@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "awscli-bastion"
+version = "0.10.0"
+description = "awscli-bastion extends the awscli by managing mfa protected short-lived credentials for an aws bastion account."
+authors = ["Aidan Melen <aidan.l.melen@gmail.com>"]
+license = "MIT"
+readme = "README.rst"
+homepage = "https://awscli-bastion.readthedocs.io/en/latest"
+repository = "https://github.com/aidanmelen/awscli-bastion"
+documentation = "https://awscli-bastion.readthedocs.io"
+classifiers = [
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+]
+
+[tool.poetry.urls]
+Changelog = "https://github.com/aidanmelen/awscli-bastion/releases"
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+click = "^7.0"
+boto3 = "^1.14.56"
+importlib-metadata = {version = "^1.5.0", python = "<3.8"}
+pendulum = "^2.1.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.0.1"
+coverage = {extras = ["toml"], version = "^5.2"}
+safety = "^1.9.0"
+mypy = "^0.782"
+typeguard = "^2.9.1"
+xdoctest = "^0.13.0"
+sphinx = "^3.2.0"
+sphinx-autobuild = "^0.7.1"
+pre-commit = "^2.6.0"
+flake8 = "^3.8.3"
+black = "^19.10b0"
+flake8-annotations = "^2.0.0"
+flake8-bandit = "^2.1.2"
+flake8-bugbear = "^20.1.4"
+flake8-docstrings = "^1.5.0"
+flake8-rst-docstrings = "^0.0.13"
+pep8-naming = "^0.11.1"
+darglint = "^1.5.2"
+reorder-python-imports = "^2.3.5"
+pre-commit-hooks = "^3.2.0"
+
+[tool.poetry.scripts]
+bastion = "awscli_bastion.__main__:main"
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["awscli_bastion"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

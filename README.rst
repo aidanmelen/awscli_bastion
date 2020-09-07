@@ -1,38 +1,86 @@
+AWSCLI Bastion
 ==============
-awscli_bastion
-==============
 
-.. image:: https://img.shields.io/pypi/v/awscli_bastion.svg
-        :target: https://pypi.python.org/pypi/awscli_bastion
+|PyPI| |Python Version| |License|
 
-.. image:: https://img.shields.io/travis/aidanmelen/awscli_bastion.svg
-        :target: https://travis-ci.org/aidanmelen/awscli_bastion
+|Read the Docs| |Tests| |Codecov|
 
-.. image:: https://readthedocs.org/projects/awscli-bastion/badge/?version=latest
-        :target: https://awscli-bastion.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
+|pre-commit| |Black|
 
+.. |PyPI| image:: https://img.shields.io/pypi/v/awscli-bastion.svg
+   :target: https://pypi.org/project/awscli-bastion/
+   :alt: PyPI
+.. |Python Version| image:: https://img.shields.io/pypi/pyversions/awscli-bastion
+   :target: https://pypi.org/project/awscli-bastion
+   :alt: Python Version
+.. |License| image:: https://img.shields.io/pypi/l/awscli-bastion
+   :target: https://opensource.org/licenses/MIT
+   :alt: License
+.. |Read the Docs| image:: https://img.shields.io/readthedocs/awscli-bastion/latest.svg?label=Read%20the%20Docs
+   :target: https://awscli-bastion.readthedocs.io/
+   :alt: Read the documentation at https://awscli-bastion.readthedocs.io/
+.. |Tests| image:: https://github.com/aidanmelen/awscli-bastion/workflows/Tests/badge.svg
+   :target: https://github.com/aidanmelen/awscli-bastion/actions?workflow=Tests
+   :alt: Tests
+.. |Codecov| image:: https://codecov.io/gh/aidanmelen/awscli-bastion/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/aidanmelen/awscli-bastion
+   :alt: Codecov
+.. |pre-commit| image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
+   :target: https://github.com/pre-commit/pre-commit
+   :alt: pre-commit
+.. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: Black
 
-.. image:: https://pyup.io/repos/github/aidanmelen/awscli_bastion/shield.svg
-        :target: https://pyup.io/repos/github/aidanmelen/awscli_bastion/
-        :alt: Updates
-
-* Free software: Apache Software License 2.0
-* Documentation: https://awscli-bastion.readthedocs.io.
-
-`awscli-bastion`_ extends the `awscli`_ by managing mfa protected short-lived credentials for an `AWS Bastion`_ account.
+`awscli-bastion`_ extends the `awscli`_ by managing MFA protected short-lived credentials for an `AWS Bastion`_ account.
 
 .. image:: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
     :target: https://raw.githubusercontent.com/aidanmelen/awscli_bastion/master/docs/awscli-bastion.png
     :align: center
 
 
-Install
--------
+Features
+--------
 
-::
+.. code:: console
 
-    $ pip install awscli-bastion
+   $ bastion --help                                                                                                                                                             HEAD
+   Usage: bastion [OPTIONS] COMMAND [ARGS]...
+
+   AWSCLI Bastion.
+
+   Options:
+   --version  Show the version and exit.
+   --help     Show this message and exit.
+
+   Commands:
+   assume-role        Get assume role STS credentials.
+   clear              Clear STS in AWS_SHARED_CREDENTIALS_FILE and...
+   session-token  Get bastion STS credentials.
+   rotate             Rotate AWS_ACCESS_KEY and AWS_SECRET_ACCESS_KEY for
+                        IAM...
+
+   set-default        Set the default profile with attributes from another...
+   set-mfa-serial     Set the 'mfa_serial' attribute for the bastion-sts...
+   show-expiration    Output how much time until the bastion-sts credentials...
+
+
+Installation
+------------
+
+You can install *AWSCLI Bastion* via pip_ from PyPI_:
+
+.. code:: console
+
+   $ pip install awscli-bastion
+
+or (recommended)
+
+.. code:: console
+
+   $ pipx install awscli-bastion
+
+Note that this will also install the `awscli` with pip.
 
 
 Configure
@@ -43,62 +91,62 @@ Configure
 
 *~/.aws/credentials*::
 
-    # these are fake credentials
-    [bastion]
-    aws_access_key_id = ASIA554SXDVIHKO5ACW2
-    aws_secret_access_key = VLJQKLEqs37HCDG4HgSDrxl1vLNrk9Is8gm0VNfA
+   # these are fake credentials
+   [bastion]
+   aws_access_key_id = ASIA554SXDVIHKO5ACW2
+   aws_secret_access_key = VLJQKLEqs37HCDG4HgSDrxl1vLNrk9Is8gm0VNfA
 
-    [bastion-sts]
-    mfa_serial = arn:aws:iam::123456789012:mfa/aidan-melen
-    credential_process = bastion get-session-token
-    source_profile = bastion
+   [bastion-sts]
+   mfa_serial = arn:aws:iam::123456789012:mfa/aidan-melen
+   credential_process = bastion get-session-token
+   source_profile = bastion
 
-    [dev-admin]
-    role_arn = arn:aws:iam::234567890123:role/admin
-    source_profile = bastion-sts
+   [dev-admin]
+   role_arn = arn:aws:iam::234567890123:role/admin
+   source_profile = bastion-sts
 
-    [stage-poweruser]
-    role_arn = arn:aws:iam::345678901234:role/poweruser
-    source_profile = bastion-sts
+   [stage-poweruser]
+   role_arn = arn:aws:iam::345678901234:role/poweruser
+   source_profile = bastion-sts
 
-    [prod-spectator]
-    role_arn = arn:aws:iam::456789012345:role/spectator
-    source_profile = bastion-sts
+   [prod-spectator]
+   role_arn = arn:aws:iam::456789012345:role/spectator
+   source_profile = bastion-sts
 
 *~/.aws/config*::
 
-    [default]
-    region = us-west-2
-    output = json
+   [default]
+   region = us-west-2
+   output = json
 
 Usage
 -----
 
 Run ``aws`` commands normally and the `credential_process`_, `role_arn, and source_profile`_ will handle the rest::
 
-    $ aws sts get-caller-identity --profile dev-admin
-    Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
-    {
-        "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
-        "Account": "123456789012",
-        "Arn": "arn:aws:sts::234567890123:assumed-role/admin/botocore-session-1234567890"
-    }
+   $ aws sts get-caller-identity --profile dev-admin
+   Enter MFA code for arn:aws:iam::123456789012:mfa/aidan-melen:
+   {
+      "UserId": "AAAAAAAAAAAAAAAAAAAAA:botocore-session-1234567890",
+      "Account": "123456789012",
+      "Arn": "arn:aws:sts::234567890123:assumed-role/admin/botocore-session-1234567890"
+   }
 
-    $ aws sts get-caller-identity --profile stage
-    {
-        "UserId": "BBBBBBBBBBBBBBBBBBBBB:botocore-session-2345678901",
-        "Account": "345678901234",
-        "Arn": "arn:aws:sts::345678901234:assumed-role/poweruser/botocore-session-2345678901"
-    }
+   $ aws sts get-caller-identity --profile stage-poweruser
+   {
+      "UserId": "BBBBBBBBBBBBBBBBBBBBB:botocore-session-2345678901",
+      "Account": "345678901234",
+      "Arn": "arn:aws:sts::345678901234:assumed-role/poweruser/botocore-session-2345678901"
+   }
 
-    $ aws sts get-caller-identity --profile prod
-    {
-        "UserId": "CCCCCCCCCCCCCCCCCCCCC:botocore-session-3456789012",
-        "Account": "456789012345",
-        "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
-    }
+   $ aws sts get-caller-identity --profile prod-spectator
+   {
+      "UserId": "CCCCCCCCCCCCCCCCCCCCC:botocore-session-3456789012",
+      "Account": "456789012345",
+      "Arn": "arn:aws:sts::456789012345:assumed-role/spectator/botocore-session-3456789012"
+   }
 
-You will only be prompted for the mfa code when the cached bastion-sts credentials expire.
+You will only be prompted for the mfa code when the cached `bastion-sts` credentials expire.
 
 Special Usage
 -------------
@@ -114,9 +162,9 @@ Configure the ``aws bastion`` alias sub-command in the *~/.aws/cli/alias* to aut
         !f() {
             if [ $# -eq 0 ]
             then
-                bastion get-session-token --write-to-aws-shared-credentials-file
+                bastion get-session-token --write
             else
-                bastion get-session-token --write-to-aws-shared-credentials-file --mfa-code $1
+                bastion get-session-token --write --mfa-code $1
             fi
             bastion assume-role dev-admin
             bastion assume-role stage-poweruser
@@ -139,9 +187,9 @@ Now your bastion-sts and assume role profiles will be populated with sts credent
 Bastion Minimal
 ---------------
 
-If you are like me, you do not trust open-source tools and libraries to handle admin 
-credentials for your aws accounts. `awscli_bastion/minimal.py <https://github.com/aidanmelen/awscli_bastion/blob/master/awscli_bastion/minimal.py>`_ is written as a script that offers 
-minimal bastion functionality. It is intended to be quick and easy to understand. 
+If you are like me, you do not trust open-source tools and libraries to handle admin
+credentials for your aws accounts. `awscli_bastion/minimal.py <https://github.com/aidanmelen/awscli_bastion/blob/master/awscli_bastion/minimal.py>`_ is written as a script that offers
+minimal bastion functionality. It is intended to be quick and easy to understand.
 A minimal number of python libraries are used to reduce security risks.
 
 Configure the ``aws bastion-minimal`` alias sub-command in the *~/.aws/cli/alias* to automate the steps for each profile::
@@ -176,11 +224,41 @@ Write sts credentials to the *~/.aws/credentials* file with our ``aws bastion-mi
 Now your bastion-sts and assume role profiles will be populated with sts credentials.
 
 
+Contributing
+------------
+
+Contributions are very welcome.
+To learn more, see the `Contributor Guide`_.
+
+
+License
+-------
+
+Distributed under the terms of the MIT_ license,
+*AWSCLI Bastion* is free and open source software.
+
+
+Issues
+------
+
+If you encounter any problems,
+please `file an issue`_ along with a detailed description.
+
+
 Credits
 -------
 
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
+This project was generated from `@cjolowicz`_'s `Hypermodern Python Cookiecutter`_ template.
 
+
+.. _@cjolowicz: https://github.com/cjolowicz
+.. _MIT: http://opensource.org/licenses/MIT
+.. _PyPI: https://pypi.org/
+.. _Hypermodern Python Cookiecutter: https://github.com/cjolowicz/cookiecutter-hypermodern-python
+.. _file an issue: https://github.com/aidanmelen/awscli-bastion/issues
+.. _pip: https://pip.pypa.io/
+.. github-only
+.. _Contributor Guide: CONTRIBUTING.rst
 .. _`awscli-bastion`: https://pypi.org/project/awscli-bastion/
 .. _`AWS Bastion`: https://blog.coinbase.com/you-need-more-than-one-aws-account-aws-bastions-and-assume-role-23946c6dfde3
 .. _`configured to use multi-factor authentication and iam roles`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-role-prepare
@@ -188,6 +266,3 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _`credential_process`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html
 .. _`role_arn, and source_profile`: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html
 .. _`writing sts credentials to the aws shared credential file`: https://aws.amazon.com/premiumsupport/knowledge-center/authenticate-mfa-cli/
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-.. _Making a python package for pypi: http://otuk.kodeten.com/making-a-python-package-for-pypi---easy-steps

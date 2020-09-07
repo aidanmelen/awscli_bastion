@@ -1,20 +1,14 @@
-Welcome to awscli_bastion's documentation!
-==========================================
+.. include:: ../README.rst
+   :end-before: github-only
+
+.. _Contributor Guide: contributing.html
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :hidden:
+   :maxdepth: 1
 
-   readme
-   installation
-   usage
-   modules
+   reference
    contributing
-   authors
-   history
-
-Indices and tables
-==================
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   Code of Conduct <codeofconduct>
+   License <license>
+   Changelog <https://github.com/aidanmelen/awscli-bastion/releases>

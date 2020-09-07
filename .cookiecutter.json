@@ -1,0 +1,10 @@
+{
+  "_template": "gh:cjolowicz/cookiecutter-hypermodern-python",
+  "author": "Aidan Melen",
+  "email": "aidan.l.melen@gmail.com",
+  "friendly_name": "AWSCLI Bastion",
+  "github_user": "aidanmelen",
+  "package_name": "awscli_bastion",
+  "project_name": "awscli-bastion",
+  "version": "1.0.0"
+}

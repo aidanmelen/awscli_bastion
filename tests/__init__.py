@@ -1,3 +1,1 @@
-# -*- coding: utf-8 -*-
-
-"""Unit test package for awscli_bastion."""
+"""Test suite for the awscli_bastion package."""
