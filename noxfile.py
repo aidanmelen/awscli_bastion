@@ -1,12 +1,13 @@
 """Nox sessions."""
 import hashlib
 import shutil
-import sys
 from pathlib import Path
 from textwrap import dedent
 
 import nox
 from nox.sessions import Session
+
+# import sys
 
 
 package = "awscli_bastion"
@@ -15,7 +16,7 @@ locations = "src", "tests", "noxfile.py", "docs/conf.py"
 nox.options.sessions = (
     "pre-commit",
     "safety",
-    "mypy",
+    # "mypy",
     "tests",
     # "typeguard",
     "docs-build",
@@ -209,15 +210,15 @@ def safety(session: Session) -> None:
     session.run("safety", "check", f"--file={requirements}", "--bare")
 
 
-@nox.session(python=python_versions)
-def mypy(session: Session) -> None:
-    """Type-check using mypy."""
-    args = session.posargs or ["src", "tests", "docs/conf.py"]
-    install_package(session)
-    install(session, "mypy")
-    session.run("mypy", *args)
-    if not session.posargs:
-        session.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
+# @nox.session(python=python_versions)
+# def mypy(session: Session) -> None:
+#     """Type-check using mypy."""
+#     args = session.posargs or ["src", "tests", "docs/conf.py"]
+#     install_package(session)
+#     install(session, "mypy")
+#     session.run("mypy", *args)
+#     if not session.posargs:
+#         session.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
 
 
 @nox.session(python=python_versions)
