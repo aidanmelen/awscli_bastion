@@ -2,7 +2,6 @@
 import logging
 import os
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 from pytest_mock import MockFixture
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True, scope="session")
-def ensure_test_credentials_are_used():
+def ensure_test_credentials_are_used() -> Any:
     """Set AWS_SHARED_CREDENTIALS_FILE to use test-credentials."""
     os.environ["AWS_SHARED_CREDENTIALS_FILE"] = os.path.join(
         os.path.dirname(__file__), "test-credentials"
@@ -24,7 +23,7 @@ def ensure_test_credentials_are_used():
 
 
 @pytest.fixture(autouse=True, scope="session")
-def ensure_test_cache_is_used():
+def ensure_test_cache_is_used() -> Any:
     """Set AWSCLI_BASTION_STS_CACHE_FILE to use test-cache."""
     os.environ["AWSCLI_BASTION_STS_CACHE_FILE"] = os.path.join(
         os.path.dirname(__file__), "test-cache"
@@ -34,7 +33,7 @@ def ensure_test_cache_is_used():
 
 
 @pytest.fixture
-def boto3_api_call(mocker: MockFixture) -> Mock:
+def boto3_api_call(mocker: MockFixture) -> Any:
     """Fixture for mocking boto3.Session.client."""
 
     def _boto3_api_call_side_effect(*args: Any, **kwargs: Any) -> Any:

@@ -1,16 +1,10 @@
 """AWSCLI Bastion auth module."""
 import logging
 from typing import Any
-from typing import Optional
 
 import boto3
 import click
 import pendulum
-
-from . import cache
-from . import credentials
-
-# from botocore.exceptions import ClientError
 
 
 logger = logging.getLogger(__name__)
@@ -19,16 +13,16 @@ logger = logging.getLogger(__name__)
 class STS:
     """AWSCLI Bastion auth module."""
 
-    ONE_HOUR_IN_SECONDS: int = pendulum.duration(hours=1).in_seconds()
-    TWELVE_HOURS_IN_SECONDS: int = pendulum.duration(hours=12).in_seconds()
+    ONE_HOUR_IN_SECONDS = pendulum.duration(hours=1).in_seconds()  # type: ignore
+    TWELVE_HOURS_IN_SECONDS = pendulum.duration(hours=12).in_seconds()  # type: ignore
 
     def __init__(
         self,
         bastion: str = "bastion",
         bastion_sts: str = "bastion-sts",
         region: str = "us-west-2",
-        cache: Optional[cache.Cache] = None,
-        credentials: Optional[credentials.Credentials] = None,
+        cache: Any = None,
+        credentials: Any = None,
     ) -> None:
         """STS init.
 
@@ -56,7 +50,7 @@ class STS:
         """
         return len(mfa_code) != 6 or not mfa_code.isdigit()
 
-    def _prompt_for_mfa_code(self, mfa_serial: str) -> int:
+    def _prompt_for_mfa_code(self, mfa_serial: str) -> str:
         """Prompt the user for the mfa code and return it.
 
         Arguments:
@@ -68,7 +62,9 @@ class STS:
         """
         is_mfa_code_invalid = True
         while is_mfa_code_invalid:
-            mfa_code = click.prompt(f"Enter MFA code for {mfa_serial}", hide_input=True)
+            mfa_code: str = click.prompt(
+                f"Enter MFA code for {mfa_serial}", hide_input=True
+            )
             if self.is_mfa_code_invalid(mfa_code):
                 click.echo(
                     "Warning: The MFA code must be 6 digits. For example: 123456"
@@ -77,8 +73,8 @@ class STS:
 
     def get_session_token(
         self,
-        mfa_code: Optional[int] = None,
-        mfa_serial: Optional[str] = None,
+        mfa_code: Any = None,
+        mfa_serial: Any = None,
         duration_seconds: int = TWELVE_HOURS_IN_SECONDS,
     ) -> Any:
         """Get the short-lived credentials from STS get session token.
@@ -151,12 +147,10 @@ class STS:
             requests.
         """
         session = boto3.Session(profile_name=self.bastion_sts, region_name=self.region)
-        print("asdasdasdasdasdasda")
-        print(dir(session.get_credentials))
         sts = session.client("sts")
 
         role_arn = self.credentials.get(profile, "role_arn")
-        timestamp = pendulum.now().to_date_string()
+        timestamp = pendulum.now().to_date_string()  # type: ignore
         try:
             iam = session.client("iam")
             username = iam.get_user()["User"]["UserName"]

@@ -26,7 +26,7 @@ def test_main_prints_help(runner: CliRunner) -> None:
 
 def test_session_token_succeeds(runner: CliRunner) -> None:
     """It exits with a status code of zero."""
-    result = runner.invoke(__main__.main, ["session-token"])
+    result = runner.invoke(__main__.main, ["get-session-token"])
     assert result.exit_code == 0
 
 

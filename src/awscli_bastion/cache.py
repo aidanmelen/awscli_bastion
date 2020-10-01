@@ -4,7 +4,6 @@ import logging
 import os
 import pathlib
 from typing import Any
-from typing import Union
 
 import click
 import pendulum
@@ -25,7 +24,7 @@ class Cache:
         self.aws_shared_cache_dir = os.path.dirname(self.bastion_sts_cache_file)
 
         if not os.path.isdir(self.aws_shared_cache_dir):
-            os.mkdirs(self.aws_shared_cache_dir)
+            os.makedirs(self.aws_shared_cache_dir)
 
     def is_expired(self) -> bool:
         """Return whether or not the bastion-sts credentials are expired.
@@ -33,12 +32,12 @@ class Cache:
         Returns:
             If the bastion-sts credentials are expired.
         """
-        now_dt = pendulum.now()
+        now_dt = pendulum.now()  # type: ignore
         expiration_iso = self.read()["Expiration"]
-        expiration_dt = pendulum.parse(expiration_iso)
-        return now_dt > expiration_dt
+        expiration_dt = pendulum.parse(expiration_iso)  # type: ignore
+        return bool(now_dt > expiration_dt)
 
-    def get_expiration(self, in_words: bool = True) -> Union[str, Any]:
+    def get_expiration(self, in_words: bool = True) -> Any:
         """Return how much time until the bastion-sts credentials expire.
 
         Arguments:
@@ -56,8 +55,8 @@ class Cache:
         else:
             raise click.ClickException("Failed to get cached bastion-sts expiration.")
 
-        now_dt = pendulum.now()
-        expiration_dt = pendulum.parse(expiration_iso)
+        now_dt = pendulum.now()  # type: ignore
+        expiration_dt = pendulum.parse(expiration_iso)  # type: ignore
         period = now_dt - expiration_dt
         return period.in_words() if in_words else period
 

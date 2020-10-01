@@ -64,9 +64,9 @@ class Credentials:
         Returns:
             How much time until the bastion-sts credentials expire.
         """
-        now_dt = pendulum.now()
+        now_dt = pendulum.now()  # type: ignore
         expiration_iso = self.get(profile, "aws_session_expiration")
-        expiration_dt = pendulum.parse(expiration_iso)
+        expiration_dt = pendulum.parse(expiration_iso)  # type: ignore
         period = now_dt - expiration_dt
         return period.in_words() if in_words else period
 
@@ -80,7 +80,7 @@ class Credentials:
             If the bastion-sts credentials are expired.
         """
         # TODO return true if is less that zero
-        return bool(self.get_expiration(profile), in_words=False)
+        return bool(self.get_expiration(profile, in_words=False))
 
     def get_mfa_serial(self, profile: str = "bastion-sts") -> str:
         """Get the mfa serial number for the bastion IAM user.
@@ -95,7 +95,7 @@ class Credentials:
         return self.get(profile, "mfa_serial")
 
     def set_mfa_serial(
-        self, mfa_serial: str = None, bastion_sts: str = "bastion_sts"
+        self, mfa_serial: Any = None, bastion_sts: str = "bastion_sts"
     ) -> None:
         """Set the `mfa_serial` attribute for the given profile.
 
@@ -129,8 +129,7 @@ class Credentials:
                     )
                 # else:
                 #     click.ClickException(f"Unexpected error: {e}")
-
-        self.config[bastion_sts]["mfa_serial"] = mfa_serial
+        self.config[bastion_sts]["mfa_serial"] = mfa_serial  # type: ignore
 
     def set_profile(self, sts_response: Any, profile: str) -> None:
         """Write to STS session credentials into a profile.
@@ -163,7 +162,7 @@ class Credentials:
         """
         try:
             self.config["default"] = dict(self.config[profile])
-        except configparser.ConfigParser.Error:
+        except Exception:
             raise click.ClickException(
                 f"Failed to set default profile with attributes from the"
                 f"`{profile}` profile. The `{profile}' profile is not defined "

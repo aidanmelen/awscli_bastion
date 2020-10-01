@@ -1,8 +1,7 @@
 """Mocked return values for boto3 API calls."""
 from datetime import datetime
-from typing import Dict
 
-sts_get_session_token: Dict = {
+sts_get_session_token = {
     "Credentials": {
         "AccessKeyId": "string",
         "SecretAccessKey": "string",
@@ -11,7 +10,7 @@ sts_get_session_token: Dict = {
     }
 }
 
-sts_assume_role: Dict = {
+sts_assume_role = {
     "Credentials": {
         "AccessKeyId": "string",
         "SecretAccessKey": "string",
@@ -22,7 +21,7 @@ sts_assume_role: Dict = {
     "PackedPolicySize": 123,
 }
 
-iam_get_user: Dict = {
+iam_get_user = {
     "User": {
         "Path": "string",
         "UserName": "string",
@@ -38,7 +37,7 @@ iam_get_user: Dict = {
     }
 }
 
-iam_list_mfa_devices: Dict = {
+iam_list_mfa_devices = {
     "MFADevices": [
         {
             "UserName": "string",
@@ -50,7 +49,7 @@ iam_list_mfa_devices: Dict = {
     "Marker": "string",
 }
 
-iam_list_access_keys: Dict = {
+iam_list_access_keys = {
     "AccessKeyMetadata": [
         {
             "UserName": "string",
@@ -63,7 +62,7 @@ iam_list_access_keys: Dict = {
     "Marker": "string",
 }
 
-iam_create_access_keys: Dict = {
+iam_create_access_keys = {
     "AccessKey": {
         "UserName": "string",
         "AccessKeyId": "string",

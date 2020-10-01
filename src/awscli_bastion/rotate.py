@@ -2,13 +2,10 @@
 import logging
 import time
 from typing import Any
-from typing import Optional
 
 import boto3
 import click
 from botocore.exceptions import ClientError
-
-from .credentials import Credentials
 
 
 logger = logging.getLogger(__name__)
@@ -20,11 +17,11 @@ class Rotate:
     def __init__(
         self,
         deactivate: bool = False,
-        username: Optional[str] = None,
+        username: Any = None,
         bastion: str = "bastion",
         bastion_sts: str = "bastion-sts",
         region: str = "us-west-2",
-        credentials: Optional[Credentials] = None,
+        credentials: Any = None,
     ) -> None:
         """Rotate Init."""
         self.deactivate = deactivate
@@ -43,7 +40,8 @@ class Rotate:
             iam = self.bastion_session.client("iam")
             self.username = username if username else iam.get_user()["User"]["UserName"]
         except ClientError as e:
-            raise click.ClickException(str(e))
+            message = str(e)
+            raise click.ClickException(message)
 
     def create_access_key(self) -> Any:
         """Create aws access key for the bastion profile."""
@@ -51,13 +49,13 @@ class Rotate:
             iam_client = self.bastion_sts_session.client("iam")
             return iam_client.create_access_key(UserName=self.username)
         except ClientError as e:
-            raise click.ClickExceptions(str(e))
+            message = str(e)
+            raise click.ClickException(message)
 
-    def _wait_until_key_is_active(self, client: Any, aws_access_key_id: str) -> None:
+    def _wait_until_key_is_active(self, aws_access_key_id: str) -> None:
         """Wait until the AWS_ACCESS_KEY_ID is active.
 
         Args:
-            client: boto3 IAM Client.
             aws_access_key_id: The AWS_ACCESS_KEY_ID to wait for an active status.
         """
         iam = self.bastion_session.client("iam")
@@ -93,7 +91,7 @@ class Rotate:
         self.credentials.config[self.bastion]["aws_access_key_id"] = ""
         self.credentials.config[self.bastion]["aws_secret_access_key"] = ""
 
-    def write(self, access_key: str) -> None:
+    def write(self, access_key: Any) -> None:
         """Write access key to the bastion profile in the aws share credentials file.
 
         Arguments:
