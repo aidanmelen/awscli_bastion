@@ -1,90 +1,116 @@
-"""Rotate IAM user AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY_ID utilities."""
+"""Rotate IAM user AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY_ID module."""
+import logging
 import time
 from typing import Any
+from typing import Optional
 
 import boto3
-import botocore
+import click
+from botocore.exceptions import ClientError
 
-from . import credentials
-
-# from typing import TypedDictclass
-
-# import datetime
+from .credentials import Credentials
 
 
-SESSION: boto3.session.Session = boto3.Session()
-
-# StsResponseCredentials(TypedDict):
-#     AccessKeyId: str
-#     SecretAccessKey: str
-#     SessionToken: str
-#     Expiration: datetime.datetime
-
-# StsResponse(TypedDict):
-#     Credentials: StsResponseCredentials
+logger = logging.getLogger(__name__)
 
 
-def _invalidate(
-    client: botocore.client.IAM, username: str, should_delete: bool
-) -> None:
-    """Deactivate the IAM user's access key and secret access key.
+class Rotate:
+    """Rotate IAM user AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY_ID module."""
 
-    Args:
-        client: boto3 IAM Client.
-        username: The name of the IAM user associated with the access key.
-        should_delete: Delete the IAM user's access key and secret access key.
-    """
-    pass
+    def __init__(
+        self,
+        deactivate: bool = False,
+        username: Optional[str] = None,
+        bastion: str = "bastion",
+        bastion_sts: str = "bastion-sts",
+        region: str = "us-west-2",
+        credentials: Optional[Credentials] = None,
+    ) -> None:
+        """Rotate Init."""
+        self.deactivate = deactivate
+        self.bastion = bastion
+        self.region = region
+        self.credentials = credentials
 
+        try:
+            self.bastion_session = boto3.Session(
+                profile_name=bastion, region_name=self.region
+            )
+            self.bastion_sts_session = boto3.Session(
+                profile_name=bastion_sts, region_name=self.region
+            )
 
-def _create(client: botocore.client.IAM, username: str) -> Any:
-    """Create aws access key for the bastion profile.
+            iam = self.bastion_session.client("iam")
+            self.username = username if username else iam.get_user()["User"]["UserName"]
+        except ClientError as e:
+            raise click.ClickException(str(e))
 
-    Args:
-        client: boto3 IAM Client.
-        username: The name of the IAM user associated with the access key.
+    def create_access_key(self) -> Any:
+        """Create aws access key for the bastion profile."""
+        try:
+            iam_client = self.bastion_sts_session.client("iam")
+            return iam_client.create_access_key(UserName=self.username)
+        except ClientError as e:
+            raise click.ClickExceptions(str(e))
 
-    Returns:
-        Contains the response to a successful CreateAccessKey request.
-    """
-    return client.create_access_key(UserName=username)
+    def _wait_until_key_is_active(self, client: Any, aws_access_key_id: str) -> None:
+        """Wait until the AWS_ACCESS_KEY_ID is active.
 
+        Args:
+            client: boto3 IAM Client.
+            aws_access_key_id: The AWS_ACCESS_KEY_ID to wait for an active status.
+        """
+        iam = self.bastion_session.client("iam")
+        access_keys = iam.list_access_keys()["AccessKeyMetadata"]
+        access_key_id_to_status = {
+            access_key["AccessKeyId"]: access_key["Status"]
+            for access_key in access_keys
+        }
 
-def _wait_until_key_is_active(
-    client: botocore.client.IAM, aws_access_key_id: str
-) -> None:
-    """Wait until the AWS_ACCESS_KEY_ID is active.
+        while True:
+            if access_key_id_to_status[aws_access_key_id] == "Active":
+                break
+            else:
+                time.sleep(1)
 
-    Args:
-        client: boto3 IAM Client.
-        aws_access_key_id: The AWS_ACCESS_KEY_ID to wait for an active status.
-    """
-    iam = boto3.client("iam")
-    access_keys = iam.list_access_keys()["AccessKeyMetadata"]
-    access_key_id_to_status = {
-        access_key["AccessKeyId"]: access_key["Status"] for access_key in access_keys
-    }
+    def retire_bastion_access_key(self) -> None:
+        """Retire aws access key for the bastion profile.
 
-    while True:
-        if access_key_id_to_status[aws_access_key_id] == "Active":
-            break
+        By default, this means deletion. Specify the 'deactivate' class
+        variable to deactivate.
+        """
+        bastion_aws_access_key_id = self.credentials.config.get(
+            self.bastion, "aws_access_key_id", fallback=None
+        )
+
+        iam = self.bastion_sts_session.resource("iam")
+        access_key = iam.AccessKey(self.username, bastion_aws_access_key_id)
+        if self.deactivate:
+            access_key.deactivate()
         else:
-            time.sleep(1)
+            access_key.delete()
 
+        self.credentials.config[self.bastion]["aws_access_key_id"] = ""
+        self.credentials.config[self.bastion]["aws_secret_access_key"] = ""
 
-def rotate(username: str = "", should_delete: bool = False) -> None:
-    """Rotate AWS_ACCESS_KEY and AWS_SECRET_ACCESS_KEY for IAM user.
+    def write(self, access_key: str) -> None:
+        """Write access key to the bastion profile in the aws share credentials file.
 
-    Args:
-        username: The name of the IAM user associated with the access key.
-        should_delete: Delete the IAM user's access key and secret access key.
-    """
-    client = SESSION.client("iam")
+        Arguments:
+            access_key: The aws access key access key to write.
+        """
+        self.credentials.config[self.bastion]["aws_access_key_id"] = access_key[
+            "AccessKey"
+        ]["AccessKeyId"]
+        self.credentials.config[self.bastion]["aws_secret_access_key"] = access_key[
+            "AccessKey"
+        ]["SecretAccessKey"]
+        self.credentials.write()
 
-    username = username if username else client.get_user()["User"]["UserName"]
-
-    _invalidate(client, username, should_delete)
-    response = _create(client, username)
-    _wait_until_key_is_active(client, response["AccessKey"]["AccessKeyId"])
-
-    credentials
+    def rotate(self) -> None:
+        """Rotate aws access key credentials for the bastion profile."""
+        access_key = self.create_access_key()
+        self._wait_until_key_is_active(access_key)
+        self.retire_bastion_access_key()
+        self.write(access_key)
+        click.echo(f"Rotated long-lived credentials for the {self.bastion} profile.")

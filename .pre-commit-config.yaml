@@ -49,6 +49,7 @@ repos:
         name: Detect AWS Credentials
         entry: detect-aws-credentials
         language: system
+        args: [--allow-missing-credentials]
   - repo: https://github.com/prettier/prettier
     rev: 2.0.5
     hooks:

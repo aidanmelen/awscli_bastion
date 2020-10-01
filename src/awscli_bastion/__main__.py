@@ -5,8 +5,8 @@ import pendulum
 from . import __version__
 
 # from . import auth
-# from . import cache
 # from . import credentials
+# from . import cache
 # from . import rotate
 
 
@@ -20,12 +20,14 @@ def main() -> None:
 @click.command()
 @click.option(
     "--duration-seconds",
+    "-d",
     help="The duration, in seconds, that the credentials should remain valid.",
     default=pendulum.duration(hours=12).seconds,
     show_default=True,
 )
 @click.option(
     "--mfa-serial",
+    "-m",
     help="The identification number of the MFA device that is associated with"
     "the IAM user.",
     default=None,
@@ -34,24 +36,27 @@ def main() -> None:
 @click.option("--mfa-code", help="The value provided by the MFA device.", default=None)
 @click.option(
     "--bastion",
+    "-b",
     help="The profile containing the IAM user credentials.",
     default="bastion",
     show_default=True,
 )
 @click.option(
     "--bastion-sts",
+    "-bs",
     help="The profile that assume role profile's source.",
     default="bastion-sts",
     show_default=True,
 )
 @click.option(
     "--region",
+    "-r",
     help="The region used when creating new AWS connections.",
     default="us-west-2",
     show_default=True,
 )
-@click.option("--write", is_flag=True, show_default=True)
-def session_token(
+@click.option("--write", "-w", is_flag=True, show_default=True)
+def get_session_token(
     duration_seconds: int,
     mfa_serial: str,
     mfa_code: int,
@@ -60,7 +65,7 @@ def session_token(
     region: str,
     write: bool,
 ) -> None:
-    """Get bastion STS credentials."""
+    """Get get_session_token STS credentials."""
     pass
 
 
@@ -68,18 +73,21 @@ def session_token(
 @click.argument("profile")
 @click.option(
     "--duration-seconds",
+    "-d",
     help="The duration, in seconds, that the credentials should remain valid.",
     default=pendulum.duration(hours=1).seconds,
     show_default=True,
 )
 @click.option(
     "--bastion-sts",
+    "-bs",
     help="The profile that assume role profile's source.",
     default="bastion-sts",
     show_default=True,
 )
 @click.option(
     "--region",
+    "-r",
     help="The region used when creating new AWS connections.",
     default="us-west-2",
     show_default=True,
@@ -88,7 +96,6 @@ def assume_role(
     profile: str, duration_seconds: int, bastion_sts: str, region: str
 ) -> None:
     """Get assume role STS credentials."""
-    pass
 
 
 @click.command()
@@ -101,7 +108,8 @@ def set_default(profile: str) -> None:
 @click.command()
 @click.option(
     "--bastion-sts",
-    help="The profile that assume role profile's source.",
+    "-bs",
+    help="The awscli profile that assume role profile's source.",
     default="bastion-sts",
     show_default=True,
 )
@@ -112,12 +120,13 @@ def set_mfa_serial(bastion_sts: str) -> None:
 
 @click.command()
 @click.option(
-    "--bastion-sts",
-    help="The profile that assume role profile's source.",
+    "--profile-name",
+    "-p",
+    help="The profile name.",
     default="bastion-sts",
     show_default=True,
 )
-def show_expiration(bastion_sts: str) -> None:
+def show_expiration(profile_name: str) -> None:
     """Output how much time until the bastion-sts credentials expire."""
     pass
 
@@ -125,12 +134,14 @@ def show_expiration(bastion_sts: str) -> None:
 @click.command()
 @click.option(
     "--username",
+    "-u",
     help="The IAM username to  have access key be rotated.",
     default="",
     show_default=True,
 )
 @click.option(
     "--should-delete",
+    "-s",
     help="Whether or not to delete the access key; otherwise, it will be "
     "deactivated during rotation.",
     is_flag=True,
@@ -138,18 +149,21 @@ def show_expiration(bastion_sts: str) -> None:
 )
 @click.option(
     "--bastion",
-    help="The profile containing the IAM user credentials.",
+    "-b",
+    help="The awscli profile containing the IAM user credentials.",
     default="bastion",
     show_default=True,
 )
 @click.option(
     "--bastion-sts",
-    help="The profile that assume role profile's source.",
+    "-bs",
+    help="The awscli profile that assume role profile's source.",
     default="bastion-sts",
     show_default=True,
 )
 @click.option(
     "--region",
+    "-r",
     help="The region used when creating new AWS connections.",
     default="us-west-2",
     show_default=True,
@@ -164,16 +178,17 @@ def rotate(
 @click.command()
 @click.option(
     "--bastion",
+    "-b",
     help="The profile containing the IAM user credentials.",
     default="bastion",
     show_default=True,
 )
 def clear(bastion: str) -> None:
-    """Clear STS in AWS_SHARED_CREDENTIALS_FILE and AWS_SHARED_CACHE_DIR."""
+    """Clear STS in awscli and AWS_SHARED_CACHE_DIR."""
     pass
 
 
-main.add_command(session_token)
+main.add_command(get_session_token)
 main.add_command(assume_role)
 main.add_command(set_default)
 main.add_command(set_mfa_serial)

@@ -89,12 +89,12 @@ Configure
 1. Ensure that your `AWS Bastion`_ account is `configured to use multi-factor authentication and iam roles`_.
 2. Ensure the ``awscli`` is configured as follows:
 
-*~/.aws/credentials*::
+::
 
-   # these are fake credentials
+   # ~/.aws/credentials
    [bastion]
-   aws_access_key_id = ASIA554SXDVIHKO5ACW2
-   aws_secret_access_key = VLJQKLEqs37HCDG4HgSDrxl1vLNrk9Is8gm0VNfA
+   aws_access_key_id = fake_access_key
+   aws_secret_access_key = fake_secret_access_key
 
    [bastion-sts]
    mfa_serial = arn:aws:iam::123456789012:mfa/aidan-melen
@@ -113,8 +113,9 @@ Configure
    role_arn = arn:aws:iam::456789012345:role/spectator
    source_profile = bastion-sts
 
-*~/.aws/config*::
+::
 
+   # ~/.aws/config
    [default]
    region = us-west-2
    output = json
@@ -151,7 +152,7 @@ You will only be prompted for the mfa code when the cached `bastion-sts` credent
 Special Usage
 -------------
 
-The ``bastion`` sub-commands support writing credentials to the *~/.aws/credentials* file in addition to the *~/.aws/cli/cache* directory.
+Use ``bastion get-session-token --write`` to write credentials to the *~/.aws/credentials* file in addition to the *~/.aws/cli/cache* directory.
 This is required for tools such as `terraform <https://www.terraform.io/>`_ that do not support the awscli cache.
 
 Configure the ``aws bastion`` alias sub-command in the *~/.aws/cli/alias* to automate the steps for each profile::
@@ -188,7 +189,7 @@ Bastion Minimal
 ---------------
 
 If you are like me, you do not trust open-source tools and libraries to handle admin
-credentials for your aws accounts. `awscli_bastion/minimal.py <https://github.com/aidanmelen/awscli_bastion/blob/master/awscli_bastion/minimal.py>`_ is written as a script that offers
+credentials for your AWS accounts. `awscli_bastion/minimal.py <https://github.com/aidanmelen/awscli_bastion/blob/master/awscli_bastion/minimal.py>`_ is written as a script that offers
 minimal bastion functionality. It is intended to be quick and easy to understand.
 A minimal number of python libraries are used to reduce security risks.
 

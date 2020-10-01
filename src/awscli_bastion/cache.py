@@ -1,73 +1,91 @@
-"""AWSCLI Bastion session cache utilities."""
+"""AWSCLI Bastion session cache module."""
 import json
+import logging
 import os
 import pathlib
 from typing import Any
-from typing import List
+from typing import Union
 
-import boto3
+import click
 import pendulum
 
 
-AWS_SHARED_CACHE_DIR: str = os.path.join(pathlib.Path.home(), ".aws/cli/cache")
-BASTION_STS_CACHE_FILE: str = os.path.join(AWS_SHARED_CACHE_DIR, "bastion-sts.json")
+logger = logging.getLogger(__name__)
 
 
-def read() -> Any:
-    """Read from the BASTION_STS_CACHE_FILE.
+class Cache:
+    """AWSCLI Bastion session cache module."""
 
-    Returns:
-        JSON from a BASTION_STS_CACHE_FILE.
-    """
-    # TODO handle missing bastion sts cache file
-    with open(BASTION_STS_CACHE_FILE, "r") as f:
-        return json.load(f)
+    def __init__(self) -> None:
+        """Cache init."""
+        self.bastion_sts_cache_file = os.environ.get(
+            "AWSCLI_BASTION_STS_CACHE_FILE",
+            os.path.join(pathlib.Path.home(), ".aws/cli/cache/bastion-sts.json"),
+        )
+        self.aws_shared_cache_dir = os.path.dirname(self.bastion_sts_cache_file)
 
+        if not os.path.isdir(self.aws_shared_cache_dir):
+            os.mkdirs(self.aws_shared_cache_dir)
 
-def write(session: boto3.session.Session) -> None:
-    """Write to BASTION_STS_CACHE_FILE.
+    def is_expired(self) -> bool:
+        """Return whether or not the bastion-sts credentials are expired.
 
-    Args:
-        session: A boto3 session.
-    """
-    creds = session["Credentials"]
-    creds["Expiration"] = creds["Expiration"].isoformat()
-    creds["Version"] = 1
+        Returns:
+            If the bastion-sts credentials are expired.
+        """
+        now_dt = pendulum.now()
+        expiration_iso = self.read()["Expiration"]
+        expiration_dt = pendulum.parse(expiration_iso)
+        return now_dt > expiration_dt
 
-    if not os.path.isdir(AWS_SHARED_CACHE_DIR):
-        os.mkdir(AWS_SHARED_CACHE_DIR)
+    def get_expiration(self, in_words: bool = True) -> Union[str, Any]:
+        """Return how much time until the bastion-sts credentials expire.
 
-    with open(BASTION_STS_CACHE_FILE, "w+") as f:
-        json.dump(creds, f, indent=4)
+        Arguments:
+            in_words: Output as human readable.
 
+        Raises:
+            ClickException: Failed to get the expiration from cache.
 
-def is_expired() -> bool:
-    """Check if the BASTION_STS_CACHE_FILE is expired.
+        Returns:
+            How much time until the bastion-sts credentials expire.
+        """
+        cache = self.read()
+        if "Expiration" in cache:
+            expiration_iso = self.read()["Expiration"]
+        else:
+            raise click.ClickException("Failed to get cached bastion-sts expiration.")
 
-    Returns:
-        Whether or not the BASTION_STS_CACHE_FILE are expired.
-    """
-    return False
+        now_dt = pendulum.now()
+        expiration_dt = pendulum.parse(expiration_iso)
+        period = now_dt - expiration_dt
+        return period.in_words() if in_words else period
 
+    def write(self, creds: Any) -> None:
+        """Writes json formatted credentials to the bastion-sts cache file.
 
-def time_until_expiration() -> Any:  # should really be pendulum.datetime.DateTime:
-    """Return time duration until BASTION_STS_CACHE_FILE expires.
+        Arguments:
+            creds: bastion-sts short-lived credentials.
+        """
+        with open(self.bastion_sts_cache_file, "w+") as f:
+            creds["Version"] = 1
+            json.dump(creds, f, indent=4)
 
-    Returns:
-        The time duration until BASTION_STS_CACHE_FILE expires.
-    """
-    # now.diff_for_humans(later)
-    return pendulum.now().add(hours=1)
+    def read(self) -> Any:
+        """Read the bastion-sts cache file.
 
+        Returns:
+            bastion-sts cache file contents.
+        """
+        with open(self.bastion_sts_cache_file, "r") as f:
+            return json.load(f)
 
-def invalidate() -> List[str]:
-    """Invalidate the cache files in the AWS_SHARED_CACHE_DIR.
-
-    Returns:
-        A list of invalidated awscli cache files.
-    """
-    cache_files = os.listdir(AWS_SHARED_CACHE_DIR)
-    if cache_files:
-        for cache in os.listdir(AWS_SHARED_CACHE_DIR):
-            os.remove(os.path.join(AWS_SHARED_CACHE_DIR, cache))
-    return cache_files
+    def delete(self) -> None:
+        """Deletes the cache files in the aws shared cache directory."""
+        cache_files = os.listdir(self.aws_shared_cache_dir)
+        if cache_files:
+            for cache in os.listdir(self.aws_shared_cache_dir):
+                os.remove(os.path.join(self.aws_shared_cache_dir, cache))
+                click.echo("- Deleted the '{}' file.".format(cache))
+        else:
+            click.echo("- No cache files to delete.")

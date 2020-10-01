@@ -1,0 +1,7 @@
+{
+    "AccessKeyId": "string",
+    "SecretAccessKey": "string",
+    "SessionToken": "string",
+    "Expiration": "2015-01-01T00:00:00",
+    "Version": 1
+}

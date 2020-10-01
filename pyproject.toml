@@ -21,11 +21,13 @@ Changelog = "https://github.com/aidanmelen/awscli-bastion/releases"
 python = "^3.6.1"
 click = "^7.0"
 boto3 = "^1.14.56"
-importlib-metadata = {version = "^1.5.0", python = "<3.8"}
 pendulum = "^2.1.2"
+importlib-metadata = {version = "^1.5.0", python = "<3.8"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"
+pytest-mock = "^3.3.1"
+pytest-cov = "^2.10.1"
 coverage = {extras = ["toml"], version = "^5.2"}
 safety = "^1.9.0"
 mypy = "^0.782"
@@ -48,6 +50,7 @@ pre-commit-hooks = "^3.2.0"
 
 [tool.poetry.scripts]
 bastion = "awscli_bastion.__main__:main"
+bastion-minimal = "awscli_bastion.minimal:main"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
