@@ -69,7 +69,7 @@ class Cache:
         :type creds: dict
         """    
         if not os.path.isdir(self.aws_shared_cache_path):
-            os.mkdirs(self.aws_shared_cache_path)
+            os.makedirs(self.aws_shared_cache_path)
 
         with open(self.bastion_sts_cache_path, 'w+') as f:
             creds["Version"] = 1
